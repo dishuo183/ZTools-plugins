@@ -196,7 +196,7 @@ const playLivePhoto = async () => {
       <!-- pic cover -->
       <img v-if="type === 'pic' || type === 'cover'" :src="list[current]" alt="预览" class="preview-img" :style="{ transform: `translate(${imageX}px, ${imageY}px) scale(${scale}) rotate(${rotation}deg) scaleX(${mirror ? -1 : 1})`, transition: isDragging ? 'none' : 'transform .3s' }" @mousedown="startDrag" @mousemove="drag" @mouseup="stopDrag" @mouseleave="stopDrag">
       <!-- live -->
-      <video v-if="type === 'live'" id="livePhoto" :src="list[current]" alt="预览" />
+      <video v-if="type === 'live'" id="livePhoto" class="preview-img" :src="list[current]" alt="预览" :style="{ transform: `translate(${imageX}px, ${imageY}px) scale(${scale}) rotate(${rotation}deg) scaleX(${mirror ? -1 : 1})`, transition: isDragging ? 'none' : 'transform .3s' }" @mousedown="startDrag" @mousemove="drag" @mouseup="stopDrag" @mouseleave="stopDrag" />
       <div v-if="type === 'live'" class="live-control" @click.stop="playLivePhoto">
         Live
       </div>
@@ -238,7 +238,7 @@ const playLivePhoto = async () => {
             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
           </svg>
           <div class="copy-menu">
-            <button v-if="type !== 'video'" class="tool-btn copy-item" @click.stop="copyImage(list[current])" title="复制图片">
+            <button v-if="type !== 'video' && type !== 'live'" class="tool-btn copy-item" @click.stop="copyImage(list[current])" title="复制图片">
               <!-- 图片 svg -->
               <svg v-if="!imageCopyLoading" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -429,6 +429,7 @@ const playLivePhoto = async () => {
   border-radius: 5px;
   font-size: 14px;
   cursor: pointer;
+  z-index: 1001;
 }
 
 </style>

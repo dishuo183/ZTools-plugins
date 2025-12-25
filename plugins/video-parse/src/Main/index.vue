@@ -278,7 +278,7 @@ const handlerLoadData = (e) => {
                 <svg t="1765683055654" class="icon loading" viewBox="0 0 1024 1024" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12849" width="20" height="20"><path d="M469.333333 128a42.666667 42.666667 0 0 1 42.666667-42.666667c235.648 0 426.666667 191.018667 426.666667 426.666667a42.666667 42.666667 0 1 1-85.333334 0 341.333333 341.333333 0 0 0-341.333333-341.333333 42.666667 42.666667 0 0 1-42.666667-42.666667z" p-id="12850"></path></svg>
                 加载中...
               </div>
-              <video v-if="item.livePhotoUrl" autoplay :id="'livePhoto' + index" class="pic-item" :src="item.livePhotoUrl" @click="open('live', index)"></video>
+              <video v-if="item.livePhotoUrl" autoplay :id="'livePhoto' + index" class="pic-item" :src="item.livePhotoUrl" @click="open('live', index)" @loadeddata="imageLoading[index] = false" @error="imageLoading[index] = false"></video>
               <img v-else class="pic-item" :src="item.url" alt="图集" @click="open('pic', index)" @load="imageLoading[index] = false" @error="imageLoading[index] = false">
               <div class="live-photo-tip" v-if="item.livePhotoUrl" @click="playLivePhoto(index)">
                 Live
