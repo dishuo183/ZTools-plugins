@@ -1,4 +1,4 @@
-export type DiffType = 'text' | 'image' | 'word'
+export type DiffType = 'text' | 'image' | 'word' | 'excel'
 
 export interface DiffChunk {
   type: 'equal' | 'insert' | 'delete' | 'modified'

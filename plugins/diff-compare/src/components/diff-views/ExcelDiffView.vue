@@ -40,6 +40,9 @@ const selectedSheetName = ref('')
 const diffResult = ref<SheetDiff[]>([])
 const loading = ref(false)
 
+let diffWorker: Worker | null = null
+let currentRequestId = 0
+
 const bothLoaded = computed(() => !!sourceWorkbook.value && !!targetWorkbook.value)
 
 const sheetOptions = computed(() => {
@@ -71,73 +74,82 @@ const handleFile = async (e: Event, side: 'source' | 'target') => {
             if (side === 'source') sourceWorkbook.value = wb
             else targetWorkbook.value = wb
         }
-        compareWorkbooks()
+        await compareWorkbooks()
     } finally {
         loading.value = false
         input.value = ''
     }
 }
 
-const compareWorkbooks = () => {
+const compareWorkbooks = async () => {
     if (!sourceWorkbook.value || !targetWorkbook.value) return
 
+    loading.value = true
     const results: SheetDiff[] = []
     const sourceSheets = sourceWorkbook.value.SheetNames
     const targetSheets = targetWorkbook.value.SheetNames
 
-    // Compare all sheets from both
     const allSheetNames = Array.from(new Set([...sourceSheets, ...targetSheets]))
 
-    allSheetNames.forEach(name => {
+    if (!diffWorker) {
+        diffWorker = new Worker(new URL('../../core/diff/diff.worker.ts', import.meta.url), { type: 'module' })
+    }
+
+    for (const name of allSheetNames) {
         const sourceSheet = sourceWorkbook.value!.Sheets[name]
         const targetSheet = targetWorkbook.value!.Sheets[name]
 
-        if (!sourceSheet && !targetSheet) return
+        if (!sourceSheet && !targetSheet) continue
 
         const sourceJSON = sourceSheet ? XLSX.utils.sheet_to_json(sourceSheet, { header: 1, raw: false, defval: '' }) as string[][] : []
         const targetJSON = targetSheet ? XLSX.utils.sheet_to_json(targetSheet, { header: 1, raw: false, defval: '' }) as string[][] : []
 
-        const diffs: CellDiff[] = []
-        const maxRows = Math.max(sourceJSON.length, targetJSON.length)
-        let maxCols = 0
-
-        for (let r = 0; r < maxRows; r++) {
-            const sourceRow = sourceJSON[r] || []
-            const targetRow = targetJSON[r] || []
-            const rowMaxCols = Math.max(sourceRow.length, targetRow.length)
-            if (rowMaxCols > maxCols) maxCols = rowMaxCols
-
-            for (let c = 0; c < rowMaxCols; c++) {
-                const sVal = normalizeString(sourceRow[c])
-                const tVal = normalizeString(targetRow[c])
-
-                if (sVal !== tVal) {
-                    diffs.push({
-                        row: r,
-                        col: c,
-                        address: XLSX.utils.encode_cell({ r, c }),
-                        source: sVal,
-                        target: tVal
-                    })
+        const requestId = ++currentRequestId
+        
+        const workerResult = await new Promise<any>((resolve, reject) => {
+            const handler = (e: MessageEvent) => {
+                const { requestId: resId, result, error } = e.data
+                if (resId === requestId) {
+                    diffWorker!.removeEventListener('message', handler)
+                    if (error) reject(error)
+                    else resolve(result)
                 }
             }
-        }
+            diffWorker!.addEventListener('message', handler)
+            diffWorker!.postMessage({
+                type: 'excel',
+                source: sourceJSON,
+                target: targetJSON,
+                requestId
+            })
+        })
 
         results.push({
             name,
-            diffs,
+            diffs: workerResult.diffs.map((d: any) => ({
+                ...d,
+                address: XLSX.utils.encode_cell({ r: d.row, c: d.col })
+            })),
             sourceData: sourceJSON,
             targetData: targetJSON,
-            rowCount: maxRows,
-            colCount: maxCols
+            rowCount: workerResult.maxRows,
+            colCount: workerResult.maxCols
         })
-    })
+    }
 
     diffResult.value = results
     if (results.length > 0 && !selectedSheetName.value) {
         selectedSheetName.value = results[0].name
     }
+    loading.value = false
 }
+
+onUnmounted(() => {
+    if (diffWorker) {
+        diffWorker.terminate()
+        diffWorker = null
+    }
+})
 
 const clearItems = () => {
     sourceWorkbook.value = null
@@ -163,7 +175,7 @@ const handlePaste = async (e: ClipboardEvent) => {
             if (sourceWorkbook.value) targetWorkbook.value = wb
             else sourceWorkbook.value = wb
         }
-        compareWorkbooks()
+        await compareWorkbooks()
     } finally {
         loading.value = false
     }
@@ -171,7 +183,6 @@ const handlePaste = async (e: ClipboardEvent) => {
 
 const sourceTableRef = ref<HTMLElement | null>(null)
 const targetTableRef = ref<HTMLElement | null>(null)
-const unifiedTableRef = ref<HTMLElement | null>(null)
 const diffBarRef = ref<HTMLElement | null>(null)
 const activeCell = ref<{ row: number; col: number } | null>(null)
 const showDiffPanel = ref(false)

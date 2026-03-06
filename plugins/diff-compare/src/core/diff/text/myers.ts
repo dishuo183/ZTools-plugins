@@ -73,22 +73,26 @@ export class TextDiffStrategy implements IDiffStrategy<string> {
     const max = n + m
     if (max === 0) return []
 
-    const v: Record<number, number> = {}
-    v[1] = 0
+    // Use Int32Array for better performance
+    // The range of k is [-d, d], so we need 2 * max + 1 entries.
+    // We map k to index k + max.
+    const v = new Int32Array(2 * max + 1)
+    v[max + 1] = 0
     
-    const trace: Record<number, number>[] = []
+    const trace: Int32Array[] = []
 
     for (let d = 0; d <= max; d++) {
-      const vCopy = { ...v }
+      const vCopy = new Int32Array(v)
       trace.push(vCopy)
 
       for (let k = -d; k <= d; k += 2) {
         let x: number
-        const down = (k === -d || (k !== d && v[k - 1] < v[k + 1]))
+        const idx = k + max
+        const down = (k === -d || (k !== d && v[idx - 1] < v[idx + 1]))
         if (down) {
-          x = v[k + 1]
+          x = v[idx + 1]
         } else {
-          x = v[k - 1] + 1
+          x = v[idx - 1] + 1
         }
         let y = x - k
 
@@ -96,10 +100,10 @@ export class TextDiffStrategy implements IDiffStrategy<string> {
           x++
           y++
         }
-        v[k] = x
+        v[idx] = x
 
         if (x >= n && y >= m) {
-          return this.backtrack(trace, a, b)
+          return this.backtrack(trace, a, b, max)
         }
       }
     }
@@ -109,7 +113,7 @@ export class TextDiffStrategy implements IDiffStrategy<string> {
   /**
    * Backtrack through the trace to build the sequence of edits
    */
-  private backtrack<T>(trace: Record<number, number>[], a: T[], b: T[]): DiffChunk[] {
+  private backtrack<T>(trace: Int32Array[], a: T[], b: T[], max: number): DiffChunk[] {
     const result: DiffChunk[] = []
     let x = a.length
     let y = b.length
@@ -117,15 +121,16 @@ export class TextDiffStrategy implements IDiffStrategy<string> {
     for (let d = trace.length - 1; d >= 0; d--) {
       const v = trace[d]
       const k = x - y
+      const idx = k + max
       let prevK: number
 
-      if (k === -d || (k !== d && v[k - 1] < v[k + 1])) {
+      if (k === -d || (k !== d && v[idx - 1] < v[idx + 1])) {
         prevK = k + 1
       } else {
         prevK = k - 1
       }
 
-      const prevX = v[prevK]
+      const prevX = v[prevK + max]
       const prevY = prevX - prevK
 
       while (x > prevX && y > prevY) {
