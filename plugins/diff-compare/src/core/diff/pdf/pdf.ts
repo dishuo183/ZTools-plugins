@@ -1,5 +1,22 @@
+/**
+ * @fileoverview PDF差异比较策略实现
+ * @module core/diff/pdf/pdf
+ * @description 实现基于视觉位置的PDF文本差异比较算法
+ */
+
 import { IDiffStrategy, DiffResult } from '../types';
 
+/**
+ * PDF文本项数据结构
+ * @interface TextItem
+ * @description 表示PDF页面中提取的文本块，包含位置和内容信息
+ * @property str - 文本内容
+ * @property transform - PDF变换矩阵 [scaleX, skewY, skewX, scaleY, translateX, translateY]
+ * @property pageNum - 页码
+ * @property index - 全局索引
+ * @property bbox - 边界框信息
+ * @property confidence - OCR识别置信度（仅OCR模式）
+ */
 export interface TextItem {
   str: string
   transform: number[]
@@ -9,9 +26,26 @@ export interface TextItem {
   confidence?: number
 }
 
+/**
+ * PDF差异比较策略类
+ * @class PdfDiffStrategy
+ * @implements IDiffStrategy<TextItem>
+ * @description 使用最长公共子序列（LCS）算法和动态规划实现PDF文本差异比较
+ */
 export class PdfDiffStrategy implements IDiffStrategy<TextItem> {
-  type = 'pdf' as const 
+  /** @type {DiffType} 策略类型标识 */
+  type = 'pdf' as const
 
+  /**
+   * 执行PDF文本差异比较
+   * @param source - 源PDF文本项数组
+   * @param target - 目标PDF文本项数组
+   * @returns 差异比较结果数组
+   * @description 使用三步策略：
+   * 1. 归一化并按视觉顺序排序
+   * 2. 使用LCS找到完全匹配项
+   * 3. 使用动态规划处理不匹配间隙
+   */
   diff(source: TextItem[], target: TextItem[]): DiffResult<TextItem>[] {
     const s = this.normalize(source)
     const t = this.normalize(target)
@@ -23,7 +57,7 @@ export class PdfDiffStrategy implements IDiffStrategy<TextItem> {
     let i = 0
     let j = 0
 
-    // 2. 遍历匹配项，处理匹配项之间的“间隙 (Gap)”
+    // 2. 遍历匹配项，处理匹配项之间的"间隙 (Gap)"
     for (const match of matches) {
       const [matchI, matchJ] = match
 
@@ -49,7 +83,13 @@ export class PdfDiffStrategy implements IDiffStrategy<TextItem> {
     return result
   }
 
-  // 二次动态规划：专门处理无法完全匹配的间隙，寻找 modify，剩余的做 delete/insert
+  /**
+   * 处理无法完全匹配的文本间隙
+   * @param sourceGap - 源文本间隙
+   * @param targetGap - 目标文本间隙
+   * @param result - 结果数组
+   * @description 使用动态规划基于文本相似度寻找 modify/delete/insert 组合
+   */
   private processGap(sourceGap: TextItem[], targetGap: TextItem[], result: DiffResult<TextItem>[]) {
     const m = sourceGap.length
     const n = targetGap.length
@@ -109,6 +149,12 @@ export class PdfDiffStrategy implements IDiffStrategy<TextItem> {
     }
   }
 
+  /**
+   * 归一化文本项数组
+   * @param items - 原始文本项数组
+   * @returns 按视觉阅读顺序排序后的数组
+   * @description 过滤空内容并按页码、Y坐标（倒序）、X坐标排序
+   */
   private normalize(items: TextItem[]): TextItem[] {
     return items
       .filter(i => i.str && i.str.trim().length > 0)
@@ -129,6 +175,13 @@ export class PdfDiffStrategy implements IDiffStrategy<TextItem> {
       })
   }
 
+  /**
+   * 计算最长公共子序列 (LCS)
+   * @param a - 源文本项数组
+   * @param b - 目标文本项数组
+   * @returns 匹配项的索引对数组
+   * @description 使用动态规划寻找完全匹配的文本项对
+   */
   private computeLCS(a: TextItem[], b: TextItem[]): [number, number][] {
     const m = a.length
     const n = b.length
@@ -163,6 +216,13 @@ export class PdfDiffStrategy implements IDiffStrategy<TextItem> {
     return matches
   }
 
+  /**
+   * 判断两个文本项是否完全相等
+   * @param a - 第一个文本项
+   * @param b - 第二个文本项
+   * @returns 是否完全相等
+   * @description 比较页码、文本内容和Y坐标（容错范围3个单位）
+   */
   private isEqual(a: TextItem, b: TextItem): boolean {
     if (a.pageNum !== b.pageNum) return false
     if (a.str !== b.str) return false
@@ -171,6 +231,13 @@ export class PdfDiffStrategy implements IDiffStrategy<TextItem> {
     return dy < 3
   }
 
+  /**
+   * 判断两个文本项是否相似
+   * @param a - 第一个文本项
+   * @param b - 第二个文本项
+   * @returns 是否相似
+   * @description 基于文本相似度和位置接近度判断
+   */
   private isSimilar(a: TextItem, b: TextItem): boolean {
     if (a.pageNum !== b.pageNum) return false
 
@@ -181,7 +248,13 @@ export class PdfDiffStrategy implements IDiffStrategy<TextItem> {
     return sim > 0.6
   }
 
-  // 核心修改：使用莱文斯坦距离 (Levenshtein Distance) 计算字符串相似度
+  /**
+   * 计算两个字符串的相似度
+   * @param a - 第一个字符串
+   * @param b - 第二个字符串
+   * @returns 相似度分数 (0-1)
+   * @description 使用莱文斯坦距离 (Levenshtein Distance) 计算字符串相似度
+   */
   private textSimilarity(a: string, b: string): number {
     if (!a && !b) return 1
     if (!a || !b) return 0
@@ -209,11 +282,23 @@ export class PdfDiffStrategy implements IDiffStrategy<TextItem> {
     return 1 - (distance / maxLen)
   }
 
+  /**
+   * 获取文本项的Y坐标
+   * @param item - 文本项
+   * @returns Y坐标值
+   * @description 优先使用 bbox，否则从 transform 矩阵提取
+   */
   private getY(item: TextItem): number {
     if (item.bbox) return item.bbox.y
     return item.transform[5]
   }
 
+  /**
+   * 获取文本项的X坐标
+   * @param item - 文本项
+   * @returns X坐标值
+   * @description 优先使用 bbox，否则从 transform 矩阵提取
+   */
   private getX(item: TextItem): number {
     if (item.bbox) return item.bbox.x
     return item.transform[4]

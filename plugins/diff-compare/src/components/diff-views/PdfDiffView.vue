@@ -167,7 +167,6 @@ async function extractTextItemsFromPdf(pdf: pdfjsLib.PDFDocumentProxy): Promise<
   const numPages = pdf.numPages;
   let globalIndex = 0;
 
-  console.log(`[PDF.js] Extracting text from ${numPages} pages`);
 
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
@@ -175,7 +174,6 @@ async function extractTextItemsFromPdf(pdf: pdfjsLib.PDFDocumentProxy): Promise<
       disableNormalization: false
     });
 
-    console.log(`[PDF.js] Page ${pageNum}: ${textContent.items.length} items`);
 
     const lines = groupByLine(textContent.items);
 
@@ -209,10 +207,8 @@ async function extractTextItemsFromPdf(pdf: pdfjsLib.PDFDocumentProxy): Promise<
       }
     }
   }
-  console.log(`[PDF.js] Extracted ${items.length} text items`);
 
   items.slice(0, 5).forEach((item, i) => {
-    console.log(`[PDF.js] Item ${i}: page=${item.pageNum}, str="${item.str.substring(0, 20)}...", bbox=`, item.bbox);
   });
 
   return items;
@@ -227,7 +223,6 @@ async function extractTextItemsWithOcr(
   const numPages = pdf.numPages;
   let globalIndex = 0;
 
-  console.log(`[OCR] Starting OCR for ${numPages} pages`);
 
   const engine = await initOcrEngine();
 
@@ -256,19 +251,11 @@ async function extractTextItemsWithOcr(
     // 调试：检查canvas内容
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const hasContent = imageData.data.some((v, i) => i % 4 !== 3 && v !== 255);
-    console.log(`[OCR] Canvas size: ${canvas.width}x${canvas.height}, hasContent: ${hasContent}`);
-
-    // 如果canvas没有内容，尝试直接传给Tesseract让它处理
-    // OCR识别
-    console.log(`[OCR] Recognizing page ${pageNum}...`);
 
     // 使用canvas.toDataURL()传递图像，Tesseract.js处理更稳定
     const imageUrl = canvas.toDataURL('image/png');
-    console.log(`[OCR] Image data URL length: ${imageUrl.length}`);
 
     const ocrResults = await engine.recognize(imageUrl);
-
-    console.log(`[OCR] Page ${pageNum}: Found ${ocrResults.length} text blocks`);
 
     // 转换为TextItem格式
     for (const ocrItem of ocrResults) {
@@ -292,7 +279,6 @@ async function extractTextItemsWithOcr(
     }
   }
 
-  console.log(`[OCR] Total items: ${items.length}`);
   return items;
 }
 
@@ -419,7 +405,6 @@ async function computeDiff(
 
   const requestId = ++currentRequestId;
   try {
-    console.log("=== PDF Diff Calculation ===");
 
     const workerResult = await new Promise<any>((resolve, reject) => {
       const handler = (e: MessageEvent) => {
@@ -443,8 +428,6 @@ async function computeDiff(
     const sourceHighlights: DiffHighlight[] = [];
     const targetHighlights: DiffHighlight[] = [];
 
-    console.log('[computeDiff] Total srcItems:', srcItems.length, 'tgtItems:', tgtItems.length);
-    console.log('[差异结果]', workerResult.filter((item: any) => item.type !== 'equal'));
 
     let srcIdx = 0;
     let tgtIdx = 0;
@@ -541,11 +524,6 @@ async function computeDiff(
     diffBlocks.value = blocks;
     diffHighlights.value = { source: sourceHighlights, target: targetHighlights };
 
-    console.log("=== Diff Results ===");
-    console.log("Total blocks:", blocks.length);
-    console.log("Diff blocks:", blocks.filter(b => b.type !== 'equal').length);
-    console.log("Source highlights:", sourceHighlights.length);
-    console.log("Target highlights:", targetHighlights.length);
 
     // 重新渲染PDF（不带高亮）
     await nextTick();
@@ -664,8 +642,6 @@ async function processAfterFileLoad() {
     }
     // 如果两个文件都已加载，计算差异
     if (sourceTextItems.value.length > 0 && targetTextItems.value.length > 0) {
-      console.log("sourcePdf内容", sourceTextItems.value)
-      console.log("targetPdf内容", targetTextItems.value)
       await computeDiff(sourceTextItems.value, targetTextItems.value);
     }
   }

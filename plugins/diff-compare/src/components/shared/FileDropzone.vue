@@ -16,18 +16,13 @@ defineEmits<{
 <template>
     <div
         class="file-dropzone flex-1 border-2 border-dashed border-[var(--color-border)] rounded-xl flex flex-col items-center justify-center bg-checker relative group hover:border-[var(--color-cta)] transition-all">
-        <input
-            type="file"
-            :accept="accept"
-            class="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
-            multiple
-            @change="$emit('change', $event)" />
+        <input type="file" :accept="accept" class="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+            multiple @change="$emit('change', $event)" />
         <div class="text-center p-8 pointer-events-none group-hover:scale-105 transition-transform">
-            <div
-                :class="[
-                    'w-14 h-14 bg-[var(--color-background)] rounded-xl flex items-center justify-center mb-3 mx-auto border border-[var(--color-border)] shadow-sm',
-                    side === 'source' ? 'text-green-600' : 'text-blue-600'
-                ]">
+            <div :class="[
+                'w-14 h-14 bg-[var(--color-background)] rounded-xl flex items-center justify-center mb-3 mx-auto border border-[var(--color-border)] shadow-sm',
+                side === 'source' ? 'text-green-600' : 'text-blue-600'
+            ]">
                 <slot name="icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
