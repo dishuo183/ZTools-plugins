@@ -108,7 +108,8 @@ const formatOptions = computed(() => [
                         </svg>
                         <span>{{ locale === 'zh' ? '设置' : (locale === 'ja' ? '設定' : 'Settings') }}</span>
                     </div>
-                    <button class="sp-close" @click="emit('close')" :title="locale === 'zh' ? '关闭' : (locale === 'ja' ? '閉じる' : 'Close')">
+                    <button class="sp-close" @click="emit('close')"
+                        :title="locale === 'zh' ? '关闭' : (locale === 'ja' ? '閉じる' : 'Close')">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18" />

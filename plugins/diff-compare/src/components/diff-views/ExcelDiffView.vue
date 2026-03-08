@@ -8,7 +8,6 @@ import ZTooltip from '@/components/ui/base/ZTooltip.vue'
 import ZSelect from '@/components/ui/base/ZSelect.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 import DiffLegend from '@/components/shared/DiffLegend.vue'
-import { normalizeString } from '@/utils/string'
 import { readFileAsArrayBuffer } from '@/utils/file'
 import { extractFilesFromClipboard } from '@/utils/clipboard'
 
@@ -105,7 +104,7 @@ const compareWorkbooks = async () => {
         const targetJSON = targetSheet ? XLSX.utils.sheet_to_json(targetSheet, { header: 1, raw: false, defval: '' }) as string[][] : []
 
         const requestId = ++currentRequestId
-        
+
         const workerResult = await new Promise<any>((resolve, reject) => {
             const handler = (e: MessageEvent) => {
                 const { requestId: resId, result, error } = e.data
@@ -524,7 +523,7 @@ const getRowDiff = (row: number) => {
                                             :class="getCellClass(r - 1, c - 1, 'source')">
                                             <div class="cell-content">
                                                 <span class="val-plain">{{ currentSheetDiff.sourceData[r - 1]?.[c - 1]
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -601,7 +600,7 @@ const getRowDiff = (row: number) => {
                                                         }}</span>
                                                 </div>
                                                 <div class="mt-1 text-[10px] opacity-50">{{ getRowDiff(r - 1)?.address
-                                                    }}
+                                                }}
                                                 </div>
                                             </div>
                                         </template>
@@ -629,7 +628,7 @@ const getRowDiff = (row: number) => {
                                             :class="getCellClass(r - 1, c - 1, 'target')">
                                             <div class="cell-content">
                                                 <span class="val-plain">{{ currentSheetDiff.targetData[r - 1]?.[c - 1]
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </td>
                                     </tr>

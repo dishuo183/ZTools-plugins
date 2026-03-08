@@ -13,8 +13,6 @@ onMounted(() => {
   if (window.ztools) {
     window.ztools.onPluginEnter((action) => {
       // Handle any specific enter actions
-      console.log('Entered diff plugin with action:', action)
-      
       const code = action.code
       if (code === 'diff-text') {
         currentMode.value = 'text'

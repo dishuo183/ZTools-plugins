@@ -272,7 +272,6 @@ const activeBlockIdx = ref(-1);
 let isProgrammaticScroll = false;
 
 const scrollToBlock = (idx: number) => {
-  console.log("scrollToBlock", idx);
   activeBlockIdx.value = idx;
   const left = leftPanelRef.value;
   const right = rightPanelRef.value;
@@ -332,16 +331,10 @@ onUnmounted(() => {
   <div class="word-root flex flex-col h-full overflow-hidden">
     <!-- Toolbar: 左文件名 | 中间差异 | 右文件名 -->
     <div
-      class="h-11 border-b border-[var(--color-border)] bg-[var(--color-background)] flex items-center gap-3 px-4 flex-shrink-0 z-30 shadow-sm"
-    >
+      class="h-11 border-b border-[var(--color-border)] bg-[var(--color-background)] flex items-center gap-3 px-4 flex-shrink-0 z-30 shadow-sm">
       <!-- 左侧：源文件名 -->
       <div class="w-[180px] min-w-0 flex items-center gap-2 flex-shrink-0">
-        <ZBadge
-          v-if="sourceFileName"
-          :title="sourceFileName"
-          variant="surface"
-          size="lg"
-          >{{ sourceFileName }}
+        <ZBadge v-if="sourceFileName" :title="sourceFileName" variant="surface" size="lg">{{ sourceFileName }}
         </ZBadge>
         <ZBadge v-else :title="t('wordSource')" variant="surface" size="lg">{{
           t("wordSource")
@@ -351,43 +344,24 @@ onUnmounted(() => {
       <!-- 中间：差异数量 + 导航 + 清空 -->
       <div class="flex-1 flex items-center justify-center gap-2 min-w-0">
         <template v-if="bothLoaded">
-          <div
-            v-if="diffCount > 0"
-            class="flex items-center gap-1.5 bg-[var(--color-surface)] rounded-md border border-[var(--color-border)] px-2 py-1"
-          >
-            <span
-              class="text-xs font-medium text-[var(--color-cta)] cursor-pointer hover:underline"
-              @click="goToNextDiff"
-            >
+          <div v-if="diffCount > 0"
+            class="flex items-center gap-1.5 bg-[var(--color-surface)] rounded-md border border-[var(--color-border)] px-2 py-1">
+            <span class="text-xs font-medium text-[var(--color-cta)] cursor-pointer hover:underline"
+              @click="goToNextDiff">
               {{ t("wordDiffCount", { n: diffCount }) }}
             </span>
-            <PrevNextButtons
-              :prev-label="t('prevChange')"
-              :next-label="t('nextChange')"
-              @prev="goToPrevDiff"
-              @next="goToNextDiff"
-            />
+            <PrevNextButtons :prev-label="t('prevChange')" :next-label="t('nextChange')" @prev="goToPrevDiff"
+              @next="goToNextDiff" />
           </div>
           <span v-else class="text-xs text-[var(--color-secondary)]">{{
             t("wordNoDiff")
           }}</span>
         </template>
         <ZTooltip :content="t('clearItems')" v-if="bothLoaded">
-          <ZButton
-            variant="ghost"
-            size="icon-sm"
-            @click="clearItems"
-            class="!w-6 !h-6 text-[var(--color-secondary)] hover:text-[var(--color-text)]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
+          <ZButton variant="ghost" size="icon-sm" @click="clearItems"
+            class="!w-6 !h-6 text-[var(--color-secondary)] hover:text-[var(--color-text)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5">
               <path d="M3 6h18" />
               <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
               <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
@@ -397,20 +371,10 @@ onUnmounted(() => {
       </div>
 
       <!-- 右侧：目标文件名 -->
-      <div
-        class="w-[180px] min-w-0 flex items-center justify-end gap-2 flex-shrink-0"
-      >
-        <ZBadge
-          v-if="targetFileName"
-          class="text-xs font-medium truncate text-right text-[var(--color-secondary)]"
-          :title="targetFileName"
-          >{{ targetFileName }}</ZBadge
-        >
-        <ZBadge
-          v-else
-          class="text-xs text-[var(--color-secondary)] opacity-60"
-          >{{ t("wordTarget") }}</ZBadge
-        >
+      <div class="w-[180px] min-w-0 flex items-center justify-end gap-2 flex-shrink-0">
+        <ZBadge v-if="targetFileName" class="text-xs font-medium truncate text-right text-[var(--color-secondary)]"
+          :title="targetFileName">{{ targetFileName }}</ZBadge>
+        <ZBadge v-else class="text-xs text-[var(--color-secondary)] opacity-60">{{ t("wordTarget") }}</ZBadge>
       </div>
     </div>
 
@@ -418,25 +382,11 @@ onUnmounted(() => {
     <div class="flex-1 overflow-hidden relative bg-[var(--color-surface)]">
       <!-- Dropzones -->
       <div v-if="!bothLoaded" class="h-full flex gap-4 p-5">
-        <FileDropzone
-          side="source"
-          :title="t('wordSource')"
-          :hint="t('uploadWord')"
-          :is-ready="!!sourceHtml"
-          :fileName="sourceFileName"
-          accept=".docx,.doc"
-          @change="handleFile($event, 'source')"
-        >
+        <FileDropzone side="source" :title="t('wordSource')" :hint="t('uploadWord')" :is-ready="!!sourceHtml"
+          :fileName="sourceFileName" accept=".docx,.doc" @change="handleFile($event, 'source')">
           <template #icon>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
               <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4" />
               <polyline points="14 2 14 8 20 8" />
               <path d="M2 15h10" />
@@ -444,25 +394,11 @@ onUnmounted(() => {
             </svg>
           </template>
         </FileDropzone>
-        <FileDropzone
-          side="target"
-          :title="t('wordTarget')"
-          :hint="t('uploadWord')"
-          :is-ready="!!targetHtml"
-          :fileName="targetFileName"
-          accept=".docx,.doc"
-          @change="handleFile($event, 'target')"
-        >
+        <FileDropzone side="target" :title="t('wordTarget')" :hint="t('uploadWord')" :is-ready="!!targetHtml"
+          :fileName="targetFileName" accept=".docx,.doc" @change="handleFile($event, 'target')">
           <template #icon>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
               <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4" />
               <polyline points="14 2 14 8 20 8" />
               <path d="M2 15h10" />
@@ -473,44 +409,24 @@ onUnmounted(() => {
       </div>
 
       <!-- Error -->
-      <div
-        v-if="loadError"
-        class="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-red-500/20 text-red-500 text-sm border border-red-500/30"
-      >
+      <div v-if="loadError"
+        class="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-red-500/20 text-red-500 text-sm border border-red-500/30">
         {{ loadError }}
       </div>
 
       <!-- Three-Column Layout: Left | Center Diff Bar | Right -->
-      <div
-        v-else
-        class="h-full flex overflow-hidden bg-[var(--color-background)]"
-      >
+      <div v-else class="h-full flex overflow-hidden bg-[var(--color-background)]">
         <!-- Left: Source -->
-        <div
-          ref="leftPanelRef"
-          class="flex-1 overflow-auto border-r border-[var(--color-border)] custom-scrollbar"
-        >
+        <div ref="leftPanelRef" class="flex-1 overflow-auto border-r border-[var(--color-border)] custom-scrollbar">
           <div class="word-doc-panel p-6 min-h-full">
-            <div
-              :id="'source-' + idx"
-              v-for="(block, idx) in paragraphBlocks"
-              :key="'src-' + idx"
-              :class="[
-                'word-block min-h-[32px] py-1.5 px-2 rounded',
-                block.type === 'delete' && 'bg-[var(--color-delete-bg)]',
-                block.type === 'modified' && 'bg-[var(--color-delete-bg)]',
-                activeBlockIdx === idx && 'ring-2 ring-[var(--color-cta)]',
-              ]"
-            >
-              <div
-                v-if="block.sourceHtml"
-                class="word-html"
-                v-html="block.sourceHtml"
-              ></div>
-              <div
-                v-else-if="block.sourceText"
-                class="text-[var(--color-text)]"
-              >
+            <div :id="'source-' + idx" v-for="(block, idx) in paragraphBlocks" :key="'src-' + idx" :class="[
+              'word-block min-h-[32px] py-1.5 px-2 rounded',
+              block.type === 'delete' && 'bg-[var(--color-delete-bg)]',
+              block.type === 'modified' && 'bg-[var(--color-delete-bg)]',
+              activeBlockIdx === idx && 'ring-2 ring-[var(--color-cta)]',
+            ]">
+              <div v-if="block.sourceHtml" class="word-html" v-html="block.sourceHtml"></div>
+              <div v-else-if="block.sourceText" class="text-[var(--color-text)]">
                 {{ block.sourceText || t("wordEmptyParagraph") }}
               </div>
             </div>
@@ -518,37 +434,20 @@ onUnmounted(() => {
         </div>
 
         <!-- Center: Slim Diff Bar -->
-        <DiffBar
-          ref="diffBarRef"
-          :title="t('wordDiffShort') || t('diffResult')"
-          :items="paragraphBlocks"
-          :active-index="activeBlockIdx"
-          @item-click="scrollToBlock"
-        />
+        <DiffBar ref="diffBarRef" :title="t('wordDiffShort') || t('diffResult')" :items="paragraphBlocks"
+          :active-index="activeBlockIdx" @item-click="scrollToBlock" />
 
         <!-- Right: Target -->
         <div ref="rightPanelRef" class="flex-1 overflow-auto custom-scrollbar">
           <div class="word-doc-panel p-6 min-h-full">
-            <div
-              :id="'target-' + idx"
-              v-for="(block, idx) in paragraphBlocks"
-              :key="'tgt-' + idx"
-              :class="[
-                'word-block min-h-[32px] py-1.5 px-2 rounded',
-                block.type === 'insert' && 'bg-[var(--color-insert-bg)]',
-                block.type === 'modified' && 'bg-[var(--color-insert-bg)]',
-                activeBlockIdx === idx && 'ring-2 ring-[var(--color-cta)]',
-              ]"
-            >
-              <div
-                v-if="block.targetHtml"
-                class="word-html"
-                v-html="block.targetHtml"
-              ></div>
-              <div
-                v-else-if="block.targetText"
-                class="text-[var(--color-text)]"
-              >
+            <div :id="'target-' + idx" v-for="(block, idx) in paragraphBlocks" :key="'tgt-' + idx" :class="[
+              'word-block min-h-[32px] py-1.5 px-2 rounded',
+              block.type === 'insert' && 'bg-[var(--color-insert-bg)]',
+              block.type === 'modified' && 'bg-[var(--color-insert-bg)]',
+              activeBlockIdx === idx && 'ring-2 ring-[var(--color-cta)]',
+            ]">
+              <div v-if="block.targetHtml" class="word-html" v-html="block.targetHtml"></div>
+              <div v-else-if="block.targetText" class="text-[var(--color-text)]">
                 {{ block.targetText || t("wordEmptyParagraph") }}
               </div>
             </div>
@@ -557,27 +456,23 @@ onUnmounted(() => {
       </div>
 
       <!-- Footer Legend -->
-      <DiffLegend
-        v-if="bothLoaded"
-        :items="[
-          {
-            label: t('removed'),
-            swatchClass:
-              'bg-[#fff5f5] border border-[#ffc9c9] dark:bg-[#3b1d1d] dark:border-[#555]',
-          },
-          {
-            label: t('modified'),
-            swatchClass:
-              'bg-[#fff9db] border border-[#ffec99] dark:bg-[#3e3810] dark:border-[#555]',
-          },
-          {
-            label: t('added'),
-            swatchClass:
-              'bg-[#ebfbee] border border-[#b2f2bb] dark:bg-[#1b3121] dark:border-[#555]',
-          },
-        ]"
-        class="absolute bottom-0 left-0 right-0"
-      />
+      <DiffLegend v-if="bothLoaded" :items="[
+        {
+          label: t('removed'),
+          swatchClass:
+            'bg-[#fff5f5] border border-[#ffc9c9] dark:bg-[#3b1d1d] dark:border-[#555]',
+        },
+        {
+          label: t('modified'),
+          swatchClass:
+            'bg-[#fff9db] border border-[#ffec99] dark:bg-[#3e3810] dark:border-[#555]',
+        },
+        {
+          label: t('added'),
+          swatchClass:
+            'bg-[#ebfbee] border border-[#b2f2bb] dark:bg-[#1b3121] dark:border-[#555]',
+        },
+      ]" class="absolute bottom-0 left-0 right-0" />
     </div>
   </div>
 </template>
@@ -593,6 +488,7 @@ onUnmounted(() => {
 }
 
 .word-html {
+
   :deep(p),
   :deep(h1),
   :deep(h2),

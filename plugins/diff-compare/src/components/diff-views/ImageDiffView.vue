@@ -189,51 +189,23 @@ onUnmounted(() => {
   <div class="img-root flex-col">
     <!-- Always Toolbar -->
     <div
-      class="h-14 border-b border-[var(--color-border)] bg-[var(--color-background)] flex items-center justify-between px-5 flex-shrink-0 z-30 shadow-sm relative w-full"
-    >
+      class="h-14 border-b border-[var(--color-border)] bg-[var(--color-background)] flex items-center justify-between px-5 flex-shrink-0 z-30 shadow-sm relative w-full">
       <div
         class="flex bg-[var(--color-surface)] rounded-md border border-[var(--color-border)] p-1 shadow-sm opacity-100 transition-opacity"
-        :class="{ 'pointer-events-none opacity-50': !bothLoaded }"
-      >
-        <ZButton
-          :variant="viewMode === 'split' ? 'primary' : 'surface'"
-          size="sm"
-          @click="viewMode = 'split'"
-          class="!rounded-md"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        :class="{ 'pointer-events-none opacity-50': !bothLoaded }">
+        <ZButton :variant="viewMode === 'split' ? 'primary' : 'surface'" size="sm" @click="viewMode = 'split'"
+          class="!rounded-md">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
             <line x1="12" y1="3" x2="12" y2="21" />
           </svg>
           {{ t("viewSplit") }}
         </ZButton>
-        <ZButton
-          :variant="viewMode === 'slider' ? 'primary' : 'surface'"
-          size="sm"
-          @click="viewMode = 'slider'"
-          class="!rounded-md"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <ZButton :variant="viewMode === 'slider' ? 'primary' : 'surface'" size="sm" @click="viewMode = 'slider'"
+          class="!rounded-md">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M11 2v20" />
             <path d="m7 16-4-4 4-4" />
             <path d="M13 2v20" />
@@ -241,45 +213,19 @@ onUnmounted(() => {
           </svg>
           {{ t("viewSlider") }}
         </ZButton>
-        <ZButton
-          :variant="viewMode === 'blend' ? 'primary' : 'surface'"
-          size="sm"
-          @click="viewMode = 'blend'"
-          class="!rounded-md"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <ZButton :variant="viewMode === 'blend' ? 'primary' : 'surface'" size="sm" @click="viewMode = 'blend'"
+          class="!rounded-md">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="10" cy="10" r="7" />
             <circle cx="14" cy="14" r="7" />
           </svg>
           {{ t("viewBlend") }}
         </ZButton>
-        <ZButton
-          :variant="viewMode === 'highlight' ? 'primary' : 'surface'"
-          size="sm"
-          @click="viewMode = 'highlight'"
-          class="!rounded-md"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <ZButton :variant="viewMode === 'highlight' ? 'primary' : 'surface'" size="sm" @click="viewMode = 'highlight'"
+          class="!rounded-md">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10" />
             <circle cx="12" cy="12" r="6" />
             <circle cx="12" cy="12" r="2" />
@@ -291,55 +237,24 @@ onUnmounted(() => {
       <div class="flex items-center gap-4">
         <div class="flex items-center gap-1 flex-col">
           <ZBadge variant="surface" size="xs">{{ t("zoom") || "Zoom" }}</ZBadge>
-          <span
-            class="text-xs font-mono font-bold text-[var(--color-secondary)]"
-            >{{ Math.round(zoom * 100) }}%</span
-          >
+          <span class="text-xs font-mono font-bold text-[var(--color-secondary)]">{{ Math.round(zoom * 100) }}%</span>
         </div>
 
         <div class="flex gap-2 justify-center items-center">
           <ZTooltip :content="t('resetZoom')">
-            <ZButton
-              variant="surface"
-              size="sm"
-              @click="resetTransform"
-              :disabled="!bothLoaded"
-              class="text-[var(--color-cta)]"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
+            <ZButton variant="surface" size="sm" @click="resetTransform" :disabled="!bothLoaded"
+              class="text-[var(--color-cta)]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
                 <path d="M3 3v5h5" />
               </svg>
             </ZButton>
           </ZTooltip>
           <ZTooltip :content="t('clearItems')">
-            <ZButton
-              variant="danger"
-              size="sm"
-              @click="clearImages"
-              :disabled="!sourceImage && !targetImage"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
+            <ZButton variant="danger" size="sm" @click="clearImages" :disabled="!sourceImage && !targetImage">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 6h18" />
                 <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                 <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
@@ -356,94 +271,46 @@ onUnmounted(() => {
       <!-- UNLOADED STATE: Two Dropzones side-by-side -->
       <div v-if="!bothLoaded" class="img-setup flex-1 flex gap-4 p-5">
         <!-- Left Source -->
-        <div
-          class="img-panel flex-1 flex flex-col h-full"
-          :class="{ 'has-img': sourceImage }"
-        >
-          <FileDropzone
-            v-if="!sourceImage"
-            side="source"
-            :title="t('imageSource')"
-            :hint="t('uploadImage')"
-            :is-ready="!!sourceImage"
-            accept="image/*"
-            @change="handleFileInput($event, 'source')"
-          >
+        <div class="img-panel flex-1 flex flex-col h-full" :class="{ 'has-img': sourceImage }">
+          <FileDropzone v-if="!sourceImage" side="source" :title="t('imageSource')" :hint="t('uploadImage')"
+            :is-ready="!!sourceImage" accept="image/*" @change="handleFileInput($event, 'source')">
             <template #icon>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
                 <circle cx="9" cy="9" r="2" />
                 <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
               </svg>
             </template>
           </FileDropzone>
-          <div
-            v-else
-            class="img-preview relative w-full h-full flex flex-col items-center justify-center p-6 bg-checker rounded-xl border border-[var(--color-border)]"
-          >
+          <div v-else
+            class="img-preview relative w-full h-full flex flex-col items-center justify-center p-6 bg-checker rounded-xl border border-[var(--color-border)]">
             <span class="view-pill absolute top-4 left-4">{{
               t("imageSource")
             }}</span>
-            <img
-              :src="sourceImage"
-              class="w-full flex-1 object-contain drop-shadow-md"
-            />
+            <img :src="sourceImage" class="w-full flex-1 object-contain drop-shadow-md" />
           </div>
         </div>
 
         <!-- Right Target -->
-        <div
-          class="img-panel flex-1 flex flex-col h-full"
-          :class="{ 'has-img': targetImage }"
-        >
-          <FileDropzone
-            v-if="!targetImage"
-            side="target"
-            :title="t('imageTarget')"
-            :hint="t('uploadImage')"
-            :is-ready="!!targetImage"
-            accept="image/*"
-            @change="handleFileInput($event, 'target')"
-          >
+        <div class="img-panel flex-1 flex flex-col h-full" :class="{ 'has-img': targetImage }">
+          <FileDropzone v-if="!targetImage" side="target" :title="t('imageTarget')" :hint="t('uploadImage')"
+            :is-ready="!!targetImage" accept="image/*" @change="handleFileInput($event, 'target')">
             <template #icon>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
                 <circle cx="9" cy="9" r="2" />
                 <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
               </svg>
             </template>
           </FileDropzone>
-          <div
-            v-else
-            class="img-preview relative w-full h-full flex flex-col items-center justify-center p-6 bg-checker rounded-xl border border-[var(--color-border)]"
-          >
+          <div v-else
+            class="img-preview relative w-full h-full flex flex-col items-center justify-center p-6 bg-checker rounded-xl border border-[var(--color-border)]">
             <span class="view-pill absolute top-4 left-4">{{
               t("imageTarget")
             }}</span>
-            <img
-              :src="targetImage"
-              class="w-full flex-1 object-contain drop-shadow-md"
-            />
+            <img :src="targetImage" class="w-full flex-1 object-contain drop-shadow-md" />
           </div>
         </div>
       </div>
@@ -453,44 +320,26 @@ onUnmounted(() => {
         <!-- Viewport -->
         <div
           class="flex-1 min-h-0 bg-checker relative flex w-full h-full overflow-hidden cursor-grab active:cursor-grabbing"
-          ref="viewportRef"
-          @wheel="handleWheel"
-          @mousedown.prevent="startPan"
-        >
+          ref="viewportRef" @wheel="handleWheel" @mousedown.prevent="startPan">
           <!-- SPLIT MODE -->
           <template v-if="viewMode === 'split'">
             <div
-              class="w-1/2 h-full flex flex-col items-center p-5 border-r border-[var(--color-border)] relative overflow-hidden"
-            >
+              class="w-1/2 h-full flex flex-col items-center p-5 border-r border-[var(--color-border)] relative overflow-hidden">
               <span class="view-pill absolute top-4 left-4 z-10">{{
                 t("imageSource")
               }}</span>
-              <div
-                class="w-full h-full flex items-center justify-center pointer-events-none"
-                :style="imageTransform"
-              >
-                <img
-                  :src="sourceImage"
-                  :draggable="false"
-                  class="max-w-full max-h-full object-contain drop-shadow-lg"
-                />
+              <div class="w-full h-full flex items-center justify-center pointer-events-none" :style="imageTransform">
+                <img :src="sourceImage" :draggable="false"
+                  class="max-w-full max-h-full object-contain drop-shadow-lg" />
               </div>
             </div>
-            <div
-              class="w-1/2 h-full flex flex-col items-center p-5 relative overflow-hidden"
-            >
+            <div class="w-1/2 h-full flex flex-col items-center p-5 relative overflow-hidden">
               <span class="view-pill absolute top-4 right-4 z-10">{{
                 t("imageTarget")
               }}</span>
-              <div
-                class="w-full h-full flex items-center justify-center pointer-events-none"
-                :style="imageTransform"
-              >
-                <img
-                  :src="targetImage"
-                  :draggable="false"
-                  class="max-w-full max-h-full object-contain drop-shadow-lg"
-                />
+              <div class="w-full h-full flex items-center justify-center pointer-events-none" :style="imageTransform">
+                <img :src="targetImage" :draggable="false"
+                  class="max-w-full max-h-full object-contain drop-shadow-lg" />
               </div>
             </div>
           </template>
@@ -502,28 +351,17 @@ onUnmounted(() => {
               <!-- Base Layer (Target) -->
               <div class="absolute inset-0" :style="imageTransform">
                 <div class="w-full h-full p-8 flex items-center justify-center">
-                  <img
-                    :src="targetImage"
-                    :draggable="false"
-                    class="max-w-full max-h-full object-contain drop-shadow-xl"
-                  />
+                  <img :src="targetImage" :draggable="false"
+                    class="max-w-full max-h-full object-contain drop-shadow-xl" />
                 </div>
               </div>
 
               <!-- Overlay Layer (Source) - Clipped -->
-              <div
-                class="absolute inset-0"
-                :style="{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }"
-              >
+              <div class="absolute inset-0" :style="{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }">
                 <div class="absolute inset-0" :style="imageTransform">
-                  <div
-                    class="w-full h-full p-8 flex items-center justify-center"
-                  >
-                    <img
-                      :src="sourceImage"
-                      :draggable="false"
-                      class="max-w-full max-h-full object-contain drop-shadow-xl"
-                    />
+                  <div class="w-full h-full p-8 flex items-center justify-center">
+                    <img :src="sourceImage" :draggable="false"
+                      class="max-w-full max-h-full object-contain drop-shadow-xl" />
                   </div>
                 </div>
               </div>
@@ -539,23 +377,11 @@ onUnmounted(() => {
             <!-- Handle -->
             <div
               class="absolute top-0 bottom-0 w-[2px] bg-[var(--color-cta)] cursor-ew-resize z-20 flex flex-col items-center justify-center transform -translate-x-1/2"
-              :style="{ left: `${sliderPos}%` }"
-              @mousedown.prevent="startSliderDrag"
-            >
+              :style="{ left: `${sliderPos}%` }" @mousedown.prevent="startSliderDrag">
               <div
-                class="cursor-ew-resize w-10 h-10 rounded-full bg-[var(--color-cta)] border-2 border-[var(--color-background)] shadow-2xl flex items-center justify-center pointer-events-none text-white transition-transform hover:scale-110"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
+                class="cursor-ew-resize w-10 h-10 rounded-full bg-[var(--color-cta)] border-2 border-[var(--color-background)] shadow-2xl flex items-center justify-center pointer-events-none text-white transition-transform hover:scale-110">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="m9 18-6-6 6-6" />
                   <path d="m15 6 6 6-6 6" />
                 </svg>
@@ -565,32 +391,20 @@ onUnmounted(() => {
 
           <!-- BLEND MODE -->
           <template v-else-if="viewMode === 'blend'">
-            <div
-              class="absolute inset-0 overflow-hidden pointer-events-none"
-              :style="imageTransform"
-            >
-              <div
-                class="relative w-full h-full p-8 flex items-center justify-center"
-              >
+            <div class="absolute inset-0 overflow-hidden pointer-events-none" :style="imageTransform">
+              <div class="relative w-full h-full p-8 flex items-center justify-center">
                 <!-- Base -->
-                <img
-                  :src="targetImage"
-                  :draggable="false"
-                  class="max-w-full max-h-full object-contain drop-shadow-xl"
-                />
+                <img :src="targetImage" :draggable="false"
+                  class="max-w-full max-h-full object-contain drop-shadow-xl" />
                 <!-- Crossfade Overlay -->
-                <img
-                  :src="sourceImage"
-                  :draggable="false"
-                  class="absolute max-w-full max-h-full object-contain drop-shadow-xl"
-                  :style="{
+                <img :src="sourceImage" :draggable="false"
+                  class="absolute max-w-full max-h-full object-contain drop-shadow-xl" :style="{
                     opacity: blendOpacity,
                     width: 'auto',
                     height: 'auto',
                     maxWidth: 'calc(100% - 64px)',
                     maxHeight: 'calc(100% - 64px)',
-                  }"
-                />
+                  }" />
               </div>
             </div>
 
@@ -609,14 +423,7 @@ onUnmounted(() => {
             <div class="blend-control" @mousedown.stop>
               <span class="blend-label">Target</span>
               <div class="blend-slider-wrap">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  v-model.number="blendOpacity"
-                  class="blend-slider"
-                />
+                <input type="range" min="0" max="1" step="0.01" v-model.number="blendOpacity" class="blend-slider" />
               </div>
               <span class="blend-label">Source</span>
             </div>
@@ -624,56 +431,29 @@ onUnmounted(() => {
 
           <!-- HIGHLIGHT MODE -->
           <template v-else-if="viewMode === 'highlight'">
-            <div
-              class="absolute inset-0 overflow-hidden pointer-events-none"
-              :style="imageTransform"
-            >
-              <div
-                class="relative w-full h-full p-8 flex items-center justify-center"
-              >
-                <img
-                  :src="targetImage"
-                  class="max-w-full max-h-full object-contain opacity-30 transition-opacity duration-300"
-                />
-                <img
-                  v-if="diffOverlay"
-                  :src="diffOverlay"
+            <div class="absolute inset-0 overflow-hidden pointer-events-none" :style="imageTransform">
+              <div class="relative w-full h-full p-8 flex items-center justify-center">
+                <img :src="targetImage"
+                  class="max-w-full max-h-full object-contain opacity-30 transition-opacity duration-300" />
+                <img v-if="diffOverlay" :src="diffOverlay"
                   class="absolute max-w-full max-h-full object-contain drop-shadow-xl transition-opacity duration-300"
                   :style="{
                     width: 'auto',
                     height: 'auto',
                     maxWidth: 'calc(100% - 64px)',
                     maxHeight: 'calc(100% - 64px)',
-                  }"
-                />
-                <div
-                  v-if="isComputingDiff"
-                  class="absolute inset-0 flex items-center justify-center bg-[var(--color-background)]/50 z-20 backdrop-blur-sm"
-                >
+                  }" />
+                <div v-if="isComputingDiff"
+                  class="absolute inset-0 flex items-center justify-center bg-[var(--color-background)]/50 z-20 backdrop-blur-sm">
                   <div class="flex flex-col items-center gap-2">
-                    <svg
-                      class="animate-spin h-8 w-8 text-[var(--color-cta)]"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        class="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="4"
-                      ></circle>
-                      <path
-                        class="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                    <svg class="animate-spin h-8 w-8 text-[var(--color-cta)]" xmlns="http://www.w3.org/2000/svg"
+                      fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                      </path>
                     </svg>
-                    <span class="text-sm font-bold opacity-70"
-                      >{{ t("computing") || "Computing Diff..." }}</span
-                    >
+                    <span class="text-sm font-bold opacity-70">{{ t("computing") || "Computing Diff..." }}</span>
                   </div>
                 </div>
               </div>
@@ -715,32 +495,22 @@ onUnmounted(() => {
 
 /* ── Checkerboard background ─────────────────────── */
 .bg-checker {
-  background-color: color-mix(
-    in srgb,
-    var(--color-background) 50%,
-    var(--color-surface)
-  );
+  background-color: color-mix(in srgb,
+      var(--color-background) 50%,
+      var(--color-surface));
   background-image:
-    linear-gradient(
-      45deg,
+    linear-gradient(45deg,
       color-mix(in srgb, var(--color-border) 20%, transparent) 25%,
-      transparent 25%
-    ),
-    linear-gradient(
-      -45deg,
+      transparent 25%),
+    linear-gradient(-45deg,
       color-mix(in srgb, var(--color-border) 20%, transparent) 25%,
-      transparent 25%
-    ),
-    linear-gradient(
-      45deg,
+      transparent 25%),
+    linear-gradient(45deg,
       transparent 75%,
-      color-mix(in srgb, var(--color-border) 20%, transparent) 75%
-    ),
-    linear-gradient(
-      -45deg,
+      color-mix(in srgb, var(--color-border) 20%, transparent) 75%),
+    linear-gradient(-45deg,
       transparent 75%,
-      color-mix(in srgb, var(--color-border) 20%, transparent) 75%
-    );
+      color-mix(in srgb, var(--color-border) 20%, transparent) 75%);
   background-size: 20px 20px;
   background-position:
     0 0,
@@ -776,11 +546,9 @@ onUnmounted(() => {
     border-color: var(--color-cta);
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
-    background: color-mix(
-      in srgb,
-      var(--color-cta) 4%,
-      var(--color-background)
-    );
+    background: color-mix(in srgb,
+        var(--color-cta) 4%,
+        var(--color-background));
   }
 
   &:hover .img-dz-icon-wrap,
