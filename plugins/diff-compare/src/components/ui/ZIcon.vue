@@ -1,6 +1,13 @@
 <script setup lang="ts">
+/**
+ * 图标组件
+ * 基于SVG Sprite的图标组件，从预注册的SVG图标集中显示图标
+ */
+
 defineProps<{
+  /** 图标名称，对应SVG Sprite中的图标ID */
   name: string
+  /** 图标尺寸（像素），默认16 */
   size?: number
 }>()
 </script>

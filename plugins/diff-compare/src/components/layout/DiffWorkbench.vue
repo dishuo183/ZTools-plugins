@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 差异对比工作台组件
+ * 应用程序的主布局组件，提供模式切换、主题管理和设置面板功能
+ */
+
 import { ref, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SettingsPanel from '@/components/layout/SettingsPanel.vue'
@@ -7,18 +12,27 @@ import ZButton from '@/components/ui/ZButton.vue'
 import ZIcon from '@/components/ui/ZIcon.vue'
 import { useTheme } from '@/composables/useTheme'
 
+/**
+ * 组件属性
+ */
 const props = defineProps<{
+    /** 初始对比模式 */
     initialMode?: string
 }>()
 
 const { locale, t } = useI18n()
+/** 当前激活的对比模式 */
 const activeMode = ref(props.initialMode || 'text')
 
+/**
+ * 监听初始模式变化，自动更新当前模式
+ */
 watchEffect(() => {
     activeMode.value = props.initialMode || 'text'
 })
 
 const { isDark, themeMode, cycleTheme } = useTheme()
+/** 是否显示设置面板 */
 const showSettings = ref(false)
 </script>
 

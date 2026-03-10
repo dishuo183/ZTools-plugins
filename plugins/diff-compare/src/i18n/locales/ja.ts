@@ -26,6 +26,7 @@ const ja = {
   computing: '差異を計算中...',
 
   // Text Diff
+  text: "テキスト",
   textMode: 'テキスト比較',
   textSplit: '並べて比較',
   textUnified: '統合比較',
@@ -95,6 +96,7 @@ const ja = {
   pdfEmptyLine: '空行',
   page: 'ページ',
   ocrInitializing: 'OCRエンジンを初期化中...',
+  ocrProcessing: 'PDFを処理中...',
 }
 
 export default ja

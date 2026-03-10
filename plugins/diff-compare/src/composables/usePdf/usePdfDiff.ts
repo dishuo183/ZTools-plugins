@@ -101,7 +101,6 @@ export function usePdfDiff() {
     const diffHighlights = ref<{ source: DiffHighlight[]; target: DiffHighlight[] }>({ source: [], target: [] })
     const isDiffing = ref(false)
     const activeBlockIdx = ref(-1)
-    const showHighlights = ref(false)
 
     let ocrEngineInstance: IOcrEngine | null = null
     let diffWorker: Worker | null = null
@@ -173,7 +172,7 @@ export function usePdfDiff() {
         const engine = await initOcrEngine()
 
         for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-            ocrStatus.value = `Processing page ${pageNum}/${numPages}...`
+            ocrStatus.value = `Processing PDF ${pageNum}/${numPages}...`
 
             const page = await pdf.getPage(pageNum)
             const viewport = page.getViewport({ scale })
@@ -311,7 +310,6 @@ export function usePdfDiff() {
             for (const diff of workerResult) {
                 const sourceItem = diff.source
                 const targetItem = diff.target
-
                 if (diff.type === 'equal') {
                     blocks.push({ type: 'equal', sourceText: sourceItem?.str || '', targetText: targetItem?.str || '', sourcePage: sourceItem?.pageNum, targetPage: targetItem?.pageNum, sourceIndex: srcIdx, targetIndex: tgtIdx })
                     srcIdx++
@@ -337,12 +335,7 @@ export function usePdfDiff() {
             diffHighlights.value = { source: sourceHighlights, target: targetHighlights }
 
             await nextTick()
-            if (sourceViewerRef && sourcePdfDoc.value) await renderPdf(sourcePdfDoc.value, sourceViewerRef)
-            if (targetViewerRef && targetPdfDoc.value) await renderPdf(targetPdfDoc.value, targetViewerRef)
-
-            if (showHighlights.value) {
-                await renderHighlights(sourceViewerRef, targetViewerRef)
-            }
+            await renderHighlights(sourceViewerRef, targetViewerRef)
         } catch (e) {
             console.error('PDF diff calculation failed:', e)
             loadError.value = String(e)
@@ -351,17 +344,6 @@ export function usePdfDiff() {
                 isDiffing.value = false
                 ocrStatus.value = ''
             }
-        }
-    }
-
-    const toggleHighlights = async (sourceViewerRef: HTMLElement | null, targetViewerRef: HTMLElement | null) => {
-        if (diffCount.value === 0) return
-        showHighlights.value = !showHighlights.value
-        if (showHighlights.value) {
-            await renderHighlights(sourceViewerRef, targetViewerRef)
-        } else {
-            if (sourceViewerRef && sourcePdfDoc.value) await renderPdf(sourcePdfDoc.value, sourceViewerRef)
-            if (targetViewerRef && targetPdfDoc.value) await renderPdf(targetPdfDoc.value, targetViewerRef)
         }
     }
 
@@ -398,9 +380,7 @@ export function usePdfDiff() {
             if (sourcePdfDoc.value && sourceTextItems.value.length === 0) {
                 const items = await extractTextItemsFromPdf(sourcePdfDoc.value)
                 sourceTextItems.value = items
-                console.log("render1", sourceViewerRef)
                 if (sourceViewerRef) {
-                    console.log("render2")
                     await renderPdf(sourcePdfDoc.value, sourceViewerRef)
                 }
             }
@@ -410,7 +390,6 @@ export function usePdfDiff() {
                 if (targetViewerRef) await renderPdf(targetPdfDoc.value, targetViewerRef)
             }
             if (sourceTextItems.value.length > 0 && targetTextItems.value.length > 0) {
-                console.log("render3", sourceViewerRef)
                 await computeDiff(sourceTextItems.value, targetTextItems.value, sourceViewerRef, targetViewerRef)
             }
         }
@@ -571,7 +550,6 @@ export function usePdfDiff() {
         diffHighlights,
         isDiffing,
         activeBlockIdx,
-        showHighlights,
         diffCount,
         handleFile,
         processFile,
@@ -579,7 +557,6 @@ export function usePdfDiff() {
         processPaste,
         scrollToBlock,
         goToNextDiff,
-        goToPrevDiff,
-        toggleHighlights,
+        goToPrevDiff
     }
 }

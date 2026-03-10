@@ -101,6 +101,12 @@ const classes = computed(() => [
         border-color: color-mix(in srgb, var(--color-delete-text) 20%, transparent);
     }
 
+    &--warning {
+        background: color-mix(in srgb, var(--color-modify-text) 12%, transparent);
+        color: var(--color-modify-text);
+        border-color: color-mix(in srgb, var(--color-modify-text) 20%, transparent);
+    }
+
     &--outline {
         background: transparent;
         border-color: var(--color-border);

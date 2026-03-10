@@ -27,19 +27,16 @@ const {
   diffBlocks,
   isDiffing,
   activeBlockIdx,
-  showHighlights,
   diffCount,
   processFile,
   clearItems,
   processPaste,
   scrollToBlock,
   goToNextDiff,
-  goToPrevDiff,
-  toggleHighlights,
+  goToPrevDiff
 } = usePdfDiff()
 
 const handleClear = () => clearItems(sourceViewerRef.value, targetViewerRef.value)
-const handleToggleHighlight = () => toggleHighlights(sourceViewerRef.value, targetViewerRef.value)
 const handleScroll = (idx: number) => scrollToBlock(idx, sourceViewerRef.value, targetViewerRef.value)
 const handleNext = () => {
   const next = goToNextDiff()
@@ -100,22 +97,6 @@ onUnmounted(() => {
 
         <template v-if="bothLoaded">
           <div v-if="diffCount > 0" class="flex items-center gap-1.5">
-            <ZTooltip :content="showHighlights ? t('hideHighlights') || '隐藏高亮' : t('showHighlights') || '显示高亮'">
-              <ZButton variant="ghost" size="sm" :active="showHighlights" @click="handleToggleHighlight"
-                class="!px-2 !h-6 text-xs">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" class="mr-1">
-                  <path d="M12 3c-1.5 0-2 .5-2 2s.5 2 2 2 2-.5 2-2-.5-2-2-2z" />
-                  <path d="M12 22c1.5 0 2-.5 2-2s-.5-2-2-2-2 .5-2 2 .5 2 2 2z" />
-                  <path d="M12 14c-1.5 0-2 .5-2 2s.5 2 2 2 2-.5 2-2-.5-2-2-2z" />
-                  <path d="M5 12H3" />
-                  <path d="M21 12h-2" />
-                  <path d="M12 5v2" />
-                  <path d="M12 17v2" />
-                </svg>
-                {{ t("highlight") || "高亮" }}
-              </ZButton>
-            </ZTooltip>
             <div
               class="flex items-center gap-1.5 bg-[var(--color-surface)] rounded-md border border-[var(--color-border)] px-2 py-1">
               <span class="text-xs font-medium text-[var(--color-cta)] cursor-pointer" @click="handleNext">
@@ -133,12 +114,7 @@ onUnmounted(() => {
         <ZTooltip :content="t('clearItems')" v-if="bothLoaded">
           <ZButton variant="ghost" size="icon-sm" @click="handleClear"
             class="!w-6 !h-6 text-[var(--color-secondary)] hover:text-[var(--color-text)]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2.5">
-              <path d="M3 6h18" />
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-            </svg>
+            <ZIcon name="trash" :size="16" />
           </ZButton>
         </ZTooltip>
       </div>
@@ -161,25 +137,13 @@ onUnmounted(() => {
         <FileDropzone side="source" :title="t('pdfSource')" :hint="t('uploadPdf')" :is-ready="!!sourceViewerRef"
           :fileName="sourceFileName" accept=".pdf" @change="handleFile($event, 'source')">
           <template #icon>
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" x2="8" y1="13" y2="13" />
-              <line x1="16" x2="8" y1="17" y2="17" />
-            </svg>
+            <ZIcon name="file-pdf" :size="28" />
           </template>
         </FileDropzone>
         <FileDropzone side="target" :title="t('pdfTarget')" :hint="t('uploadPdf')" :is-ready="!!targetViewerRef"
           :fileName="targetFileName" accept=".pdf" @change="handleFile($event, 'target')">
           <template #icon>
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" x2="8" y1="13" y2="13" />
-              <line x1="16" x2="8" y1="17" y2="17" />
-            </svg>
+            <ZIcon name="file-pdf" :size="28" />
           </template>
         </FileDropzone>
       </div>
@@ -194,13 +158,7 @@ onUnmounted(() => {
       <div v-if="loading || isDiffing"
         class="absolute inset-0 flex items-center justify-center bg-[var(--color-background)]/80 z-40">
         <div class="flex flex-col items-center gap-3">
-          <svg class="animate-spin h-8 w-8 text-[var(--color-cta)]" xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-            </path>
-          </svg>
+          <ZIcon name="loading" :size="28" />
           <span class="text-sm font-medium">{{ ocrStatus || (loading ? t("pdfRendering") : t("computingDiff")) }}</span>
         </div>
       </div>

@@ -1,57 +1,31 @@
+/**
+ * 语法高亮Composable
+ * 提供代码语法高亮和差异高亮功能
+ */
+
 import { ref, computed } from 'vue'
 import hljs from 'highlight.js'
+import { LANGUAGES } from '@/utils/formatter'
 
+/**
+ * 差异行类型定义
+ */
 export type DiffLineType = 'equal' | 'delete' | 'insert' | 'modify'
 
-// 语言配置：value(用户选择) -> hljs(highlight.js用) / label(显示名称)
-const LANGUAGES: { value: string; hljs: string; label: string }[] = [
-  { value: 'json', hljs: 'json', label: 'JSON' },
-  { value: 'yaml', hljs: 'yaml', label: 'YAML' },
-  { value: 'yml', hljs: 'yaml', label: 'YAML' },
-  { value: 'html', hljs: 'xml', label: 'HTML' },
-  { value: 'xml', hljs: 'xml', label: 'XML' },
-  { value: 'css', hljs: 'css', label: 'CSS' },
-  { value: 'javascript', hljs: 'javascript', label: 'JavaScript' },
-  { value: 'js', hljs: 'javascript', label: 'JavaScript' },
-  { value: 'typescript', hljs: 'typescript', label: 'TypeScript' },
-  { value: 'ts', hljs: 'typescript', label: 'TypeScript' },
-  { value: 'python', hljs: 'python', label: 'Python' },
-  { value: 'py', hljs: 'python', label: 'Python' },
-  { value: 'c', hljs: 'c', label: 'C' },
-  { value: 'cpp', hljs: 'cpp', label: 'C++' },
-  { value: 'c++', hljs: 'cpp', label: 'C++' },
-  { value: 'java', hljs: 'java', label: 'Java' },
-  { value: 'rust', hljs: 'rust', label: 'Rust' },
-  { value: 'rs', hljs: 'rust', label: 'Rust' },
-  { value: 'go', hljs: 'go', label: 'Go' },
-  { value: 'golang', hljs: 'go', label: 'Go' },
-  { value: 'sql', hljs: 'sql', label: 'SQL' },
-  { value: 'markdown', hljs: 'markdown', label: 'Markdown' },
-  { value: 'md', hljs: 'markdown', label: 'Markdown' },
-  { value: 'shell', hljs: 'bash', label: 'Shell' },
-  { value: 'sh', hljs: 'bash', label: 'Shell' },
-  { value: 'bash', hljs: 'bash', label: 'Shell' },
-  { value: 'ruby', hljs: 'ruby', label: 'Ruby' },
-  { value: 'rb', hljs: 'ruby', label: 'Ruby' },
-  { value: 'php', hljs: 'php', label: 'PHP' },
-  { value: 'swift', hljs: 'swift', label: 'Swift' },
-  { value: 'kotlin', hljs: 'kotlin', label: 'Kotlin' },
-  { value: 'cs', hljs: 'csharp', label: 'C#' },
-  { value: 'csharp', hljs: 'csharp', label: 'C#' },
-]
-
-// 导出语言选项（去重 + 排序）
+/**
+ * 语言选项列表（去重 + 排序）
+ * 用于语言选择下拉框
+ */
 export const langOptions = computed(() => {
   const seen = new Set<string>()
   const options: { label: string; value: string }[] = [{ label: 'auto', value: 'auto' }]
 
   for (const lang of LANGUAGES) {
-    if (!seen.has(lang.value)) {
-      seen.add(lang.value)
+    if (!seen.has(lang.label)) {
+      seen.add(lang.label)
       options.push({ label: lang.label, value: lang.value })
     }
   }
-
   return options.sort((a, b) => {
     if (a.value === 'auto') return -1
     if (b.value === 'auto') return 1
@@ -59,13 +33,25 @@ export const langOptions = computed(() => {
   })
 })
 
+/**
+ * 语法高亮Composable
+ * 提供源代码和目标代码的语法高亮功能
+ */
 export function useSyntaxHighlight() {
+  /** 源文本的高亮结果 */
   const highlightedSource = ref('')
+  /** 目标文本的高亮结果 */
   const highlightedTarget = ref('')
+  /** 源文本的语言类型 */
   const sourceLang = ref('')
+  /** 目标文本的语言类型 */
   const targetLang = ref('')
 
-  // 根据 value 查找 hljs 语言名
+  /**
+   * 根据用户选择的语言值查找highlight.js使用的语言名
+   * @param value - 用户选择的语言值
+   * @returns highlight.js 语言名或undefined
+   */
   const toHljsLang = (value: string): string | undefined => {
     const lang = LANGUAGES.find(l => l.value === value.toLowerCase())
     return lang?.hljs
@@ -117,6 +103,8 @@ export function useSyntaxHighlight() {
       return `<span class="diff-line-delete">${highlighted}</span>`
     } else if (diffType === 'insert') {
       return `<span class="diff-line-insert">${highlighted}</span>`
+    } else if (diffType === 'modify') {
+      return `<span class="diff-line-modify">${highlighted}</span>`
     }
     return highlighted
   }

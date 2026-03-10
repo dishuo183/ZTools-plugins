@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 设置面板组件
+ * 提供语言切换、自动格式化设置和使用说明展示功能
+ */
+
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ZSelect from '@/components/ui/ZSelect.vue'
@@ -10,14 +15,23 @@ const { locale, t } = useI18n()
 const settingsStore = useSettingsStore()
 const { autoFormat } = storeToRefs(settingsStore)
 
+/**
+ * 关闭面板事件
+ */
 const emit = defineEmits(['close'])
 
+/**
+ * 语言选项列表
+ */
 const langOptions = ref([
     { label: '中文', value: 'zh' },
     { label: 'English', value: 'en' },
     { label: '日本語', value: 'ja' }
 ])
 
+/**
+ * 使用说明列表（根据当前语言动态返回）
+ */
 const usageItems = computed(() => {
     const zh = [
         {

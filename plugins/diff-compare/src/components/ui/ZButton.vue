@@ -1,17 +1,37 @@
 <script setup lang="ts">
+/**
+ * 按钮组件
+ * 提供多种样式变体和尺寸的按钮
+ */
+
 import { computed } from 'vue'
 
+/**
+ * 组件属性
+ */
 const props = defineProps<{
+    /** 按钮样式变体 */
     variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'ghost-cta' | 'surface'
+    /** 按钮尺寸 */
     size?: 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm'
+    /** 是否激活（选中）状态 */
     active?: boolean
+    /** 是否禁用 */
     disabled?: boolean
+    /** 是否块级显示 */
     block?: boolean
+    /** 自定义CSS类 */
     class?: string
 }>()
 
+/**
+ * 点击事件
+ */
 const emit = defineEmits(['click'])
 
+/**
+ * 计算CSS类名
+ */
 const classes = computed(() => {
     return [
         'z-btn',
@@ -24,6 +44,9 @@ const classes = computed(() => {
     ]
 })
 
+/**
+ * 处理点击事件
+ */
 const handleClick = (e: MouseEvent) => {
     if (props.disabled) return
     emit('click', e)

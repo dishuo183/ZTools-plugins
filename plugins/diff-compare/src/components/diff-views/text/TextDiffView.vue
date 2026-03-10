@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 文本差异对比视图组件
+ * 提供文本对比功能，包括分屏视图、统一视图、语法高亮和差异导航
+ */
+
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import ZSelect from "@/components/ui/ZSelect.vue";
@@ -6,7 +11,7 @@ import ZTooltip from "@/components/ui/ZTooltip.vue";
 import ZButton from "@/components/ui/ZButton.vue";
 import ZBadge from "@/components/ui/ZBadge.vue";
 import ZIcon from "@/components/ui/ZIcon.vue";
-import DiffBar from "@/components/shared/DiffBar.vue";
+import DiffBar, { DiffBarItem } from "@/components/shared/DiffBar.vue";
 import { detectLanguage } from "@/utils/formatter";
 import { useTextDiff } from "@/composables/useText";
 import { useAutoFormat } from "@/composables/useText";
@@ -14,7 +19,9 @@ import { useSyntaxHighlight, langOptions } from "@/composables/useText";
 import 'highlight.js/styles/dark.min.css'
 
 const { t } = useI18n();
+/** 文本视图模式：split-分屏, unified-统一 */
 const textViewMode = ref<"split" | "unified">("split");
+/** 选中的编程语言 */
 const selectedLang = ref("auto");
 
 const {
@@ -24,24 +31,21 @@ const {
   isDiffing,
   leftLines,
   rightLines,
-  addedCount,
-  removedCount,
+  insertedCount,
+  deletedCount,
+  modifiedCount,
   changeIndices,
   unifiedDiffLines,
-  swapTexts,
   currentChangeIdx,
   goToPrevChange,
   goToNextChange,
-  resetNavigation,
   registerScrollCallback,
   totalChanges,
 } = useTextDiff()
 
-const { scheduleAutoFormat, immediateFormat } = useAutoFormat()
+const { scheduleAutoFormat } = useAutoFormat()
 
 const {
-  highlightedSource,
-  highlightedTarget,
   highlightSource,
   highlightTarget,
   highlightWithDiff,
@@ -49,6 +53,8 @@ const {
   isTargetHighlighted,
 } = useSyntaxHighlight()
 
+const leftLineNumberRef = ref<HTMLElement | null>(null)
+const rightLineNumberRef = ref<HTMLElement | null>(null)
 const leftTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const rightTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const sourceHighlightRef = ref<HTMLElement | null>(null)
@@ -56,20 +62,24 @@ const targetHighlightRef = ref<HTMLElement | null>(null)
 const diffBarRef = ref<HTMLElement | null>(null)
 
 const diffBarItems = computed(() => {
-  return diffLines.value.map(line => ({
-    type: line.type,
-    sourceText: line.type === 'delete' ? line.value : undefined,
-    targetText: line.type === 'insert' ? line.value : undefined,
-  }))
+  const itemMapper = {
+    delete: (item: any) => ({ type: 'delete' as const, sourceText: item.value }),
+    insert: (item: any) => ({ type: 'insert' as const, targetText: item.value }),
+    modify: (item: any) => ({
+      type: 'modify' as const,
+      sourceText: item.sourceValue,
+      targetText: item.targetValue
+    }),
+    equal: (item: any) => ({
+      type: 'equal' as const,
+      sourceText: item.value,
+      targetText: item.value
+    })
+  };
+  return diffLines.value.map(item =>
+    itemMapper[item.type](item)
+  );
 })
-
-const setSourceHighlightRef = (el: HTMLElement | null) => {
-  sourceHighlightRef.value = el
-}
-
-const setTargetHighlightRef = (el: HTMLElement | null) => {
-  targetHighlightRef.value = el
-}
 
 // 使用从 useSyntaxHighlight 导出的语言选项
 const langOptionsWithI18n = computed(() => {
@@ -94,7 +104,7 @@ const getLangLabel = (langValue: string) => {
   );
   return opt ? opt.label : langValue.toUpperCase() || "Text";
 };
-
+// 获取检测到的语言标签
 const sourceLangLabel = computed(() => getLangLabel(sourceLang.value));
 const targetLangLabel = computed(() => getLangLabel(targetLang.value));
 
@@ -120,54 +130,48 @@ const diffHighlightedTarget = computed(() => {
   }).join('\n')
 })
 
-const onLeftScroll = (e: Event) => {
+const onTextScroll = (e: Event, type: "source" | "target") => {
   const target = e.target as HTMLTextAreaElement;
-  if (sourceHighlightRef.value) {
-    sourceHighlightRef.value.scrollTop = target.scrollTop
-    sourceHighlightRef.value.scrollLeft = target.scrollLeft
+  let highRef = null
+  let textRef = null
+  let lineRef = null
+  if (type === "source") {
+    highRef = sourceHighlightRef
+    textRef = leftTextareaRef
+    lineRef = leftLineNumberRef
+  } else {
+    highRef = targetHighlightRef
+    textRef = rightTextareaRef
+    lineRef = rightLineNumberRef
   }
-  const container = target.closest('.diff-scroll-container');
-  if (container) {
-    container.scrollTop = target.scrollTop;
-  }
+  requestAnimationFrame(() => {
+    // todo:平滑滚动
+    highRef?.value.scrollTo(0, target.scrollTop);
+    textRef?.value.scrollTo(0, target.scrollTop);
+    lineRef?.value.scrollTo(0, target.scrollTop);
+  })
 }
 
-const onRightScroll = (e: Event) => {
-  const target = e.target as HTMLTextAreaElement;
-  if (targetHighlightRef.value) {
-    targetHighlightRef.value.scrollTop = target.scrollTop
-    targetHighlightRef.value.scrollLeft = target.scrollLeft
-  }
-  const container = target.closest('.diff-scroll-container');
-  if (container) {
-    container.scrollTop = target.scrollTop;
-  }
-}
-
-const onLeftKeydown = (e: KeyboardEvent) => {
+const onTextKeydown = (e: KeyboardEvent, type: "source" | "target") => {
   if (e.key === 'Tab') {
     e.preventDefault()
     const target = e.target as HTMLTextAreaElement
     const start = target.selectionStart
     const end = target.selectionEnd
-    sourceText.value = sourceText.value.substring(0, start) + '  ' + sourceText.value.substring(end)
+    if (type === "source") {
+      sourceText.value = sourceText.value.substring(0, start) + '  ' + sourceText.value.substring(end)
+    } else {
+      targetText.value = targetText.value.substring(0, start) + '  ' + targetText.value.substring(end)
+    }
     requestAnimationFrame(() => {
       target.selectionStart = target.selectionEnd = start + 2
     })
   }
 }
 
-const onRightKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Tab') {
-    e.preventDefault()
-    const target = e.target as HTMLTextAreaElement
-    const start = target.selectionStart
-    const end = target.selectionEnd
-    targetText.value = targetText.value.substring(0, start) + '  ' + targetText.value.substring(end)
-    requestAnimationFrame(() => {
-      target.selectionStart = target.selectionEnd = start + 2
-    })
-  }
+const onTextClear = () => {
+  sourceText.value = ''
+  targetText.value = ''
 }
 
 watch([sourceText, sourceLang], ([text, lang]) => {
@@ -186,12 +190,18 @@ watch(targetText, () => {
   scheduleAutoFormat(targetText, selectedLang.value, "target")
 })
 
-const handleScroll = (idx: number) => {
+const onItemScroll = (idx: number) => {
   const scrollTop = idx * 24
-  leftTextareaRef.value?.scrollTo(0, scrollTop)
-  rightTextareaRef.value?.scrollTo(0, scrollTop)
-  if (sourceHighlightRef.value) sourceHighlightRef.value.scrollTop = scrollTop
-  if (targetHighlightRef.value) targetHighlightRef.value.scrollTop = scrollTop
+  requestAnimationFrame(() => {
+    leftTextareaRef.value?.scrollTo(0, scrollTop)
+    rightTextareaRef.value?.scrollTo(0, scrollTop)
+    if (sourceHighlightRef.value) {
+      sourceHighlightRef.value.scrollTop = scrollTop
+    }
+    if (targetHighlightRef.value) {
+      targetHighlightRef.value.scrollTop = scrollTop
+    }
+  })
 }
 
 let unregisterLeft: (() => void) | undefined
@@ -224,7 +234,7 @@ onUnmounted(() => {
         </div>
 
         <div class="h-4 w-px bg-[var(--color-border)] mx-1"></div>
-
+        <!-- View Mode -->
         <div class="flex bg-[var(--color-surface)] rounded-md border border-[var(--color-border)] p-1 shadow-sm gap-1">
           <ZButton :variant="textViewMode === 'split' ? 'primary' : 'surface'" size="sm" @click="textViewMode = 'split'"
             class="!rounded-md">
@@ -237,8 +247,30 @@ onUnmounted(() => {
             {{ t("textUnified") }}
           </ZButton>
         </div>
-      </div>
 
+        <!-- Change Navigation -->
+        <div class="flex items-center gap-1">
+          <ZTooltip :content="t('prevChange') || 'Previous Change'" position="bottom">
+            <ZButton variant="ghost" size="icon-sm" @click="goToPrevChange" :disabled="totalChanges === 0"
+              class="!w-8 !h-8 !p-0">
+              <ZIcon name=" prev" :size="16" />
+            </ZButton>
+          </ZTooltip>
+          <ZTooltip :content="t('nextChange') || 'Next Change'" position="bottom">
+            <ZButton variant="ghost" size="icon-sm" @click="goToNextChange" :disabled="totalChanges === 0"
+              class="!w-8 !h-8 !p-0">
+              <ZIcon name="next" :size="16" />
+            </ZButton>
+          </ZTooltip>
+          <ZTooltip :content="t('clearItems')" position="bottom">
+            <ZButton variant="ghost" size="icon-sm" @click="onTextClear" :disabled="!sourceText || !targetText"
+              class="!w-8 !h-8 !p-0">
+              <ZIcon name="trash" :size="16" />
+            </ZButton>
+          </ZTooltip>
+        </div>
+      </div>
+      <!-- Change Count -->
       <div class="flex gap-4 items-center">
         <div v-if="isDiffing" class="flex items-center">
           <ZBadge variant="primary" dot pulse size="lg">
@@ -246,27 +278,11 @@ onUnmounted(() => {
           </ZBadge>
         </div>
         <div class="flex gap-2">
-          <ZBadge variant="success" size="lg">+{{ addedCount }}</ZBadge>
-          <ZBadge variant="danger" size="lg">-{{ removedCount }}</ZBadge>
+          <ZBadge variant="success" size="lg">+{{ insertedCount }}</ZBadge>
+          <ZBadge variant="danger" size="lg">-{{ deletedCount }}</ZBadge>
+          <ZBadge variant="warning" size="lg"> {{ modifiedCount }}</ZBadge>
         </div>
         <div class="h-4 w-px bg-[var(--color-border)] mx-1"></div>
-        <div class="flex items-center gap-1">
-          <ZTooltip :content="t('prevChange') || 'Previous Change'" position="bottom">
-            <ZButton variant="surface" size="sm" @click="goToPrevChange" :disabled="totalChanges === 0"
-              class="!w-8 !h-8 !p-0">
-              <ZIcon name="prev" :size="16" />
-            </ZButton>
-          </ZTooltip>
-          <ZTooltip :content="t('nextChange') || 'Next Change'" position="bottom">
-            <ZButton variant="surface" size="sm" @click="goToNextChange" :disabled="totalChanges === 0"
-              class="!w-8 !h-8 !p-0">
-              <ZIcon name="next" :size="16" />
-            </ZButton>
-          </ZTooltip>
-          <span v-if="totalChanges > 0" class="text-xs text-[var(--color-secondary)] ml-1 font-mono min-w-[40px]">
-            {{ currentChangeIdx >= 0 ? currentChangeIdx + 1 : 0 }}/{{ totalChanges }}
-          </span>
-        </div>
       </div>
     </div>
 
@@ -294,8 +310,8 @@ onUnmounted(() => {
           </div>
           <div class="relative flex-1 group w-full h-full overflow-hidden">
             <!-- Line Numbers -->
-            <div
-              class="absolute left-0 top-0 bottom-0 w-10 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex-shrink-0 flex flex-col font-mono text-[10px] text-[var(--color-secondary)] opacity-40 select-none text-right px-2 py-2 overflow-hidden">
+            <div ref="leftLineNumberRef"
+              class="line-number-container absolute left-0 top-0 bottom-0 w-10 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex-shrink-0 flex flex-col font-mono text-[10px] text-[var(--color-secondary)] opacity-40 select-none text-right px-2 py-2 overflow-hidden">
               <div v-for="line in leftLines" :key="'ln-l-' + line.lineNum" class="h-6 leading-6">
                 {{ line.lineNum }}
               </div>
@@ -303,11 +319,12 @@ onUnmounted(() => {
             <!-- Diff Highlights + Textarea -->
             <div class="absolute left-10 right-0 top-0 bottom-0">
               <!-- Highlight layer -->
-              <pre v-if="isSourceHighlighted" :ref="setSourceHighlightRef"
+              <pre v-if="isSourceHighlighted" ref="sourceHighlightRef"
                 class="highlight-layer absolute inset-0 m-0 p-2 font-mono text-sm leading-6 whitespace-pre-wrap break-all pointer-events-none overflow-auto scrollbar-hide"
                 v-html="diffHighlightedSource"></pre>
               <!-- Textarea -->
-              <textarea ref="leftTextareaRef" v-model="sourceText" @scroll="onLeftScroll" @keydown="onLeftKeydown"
+              <textarea ref=" leftTextareaRef" v-model="sourceText" @scroll="onTextScroll($event, 'source')"
+                @keydown="onTextKeydown($event, 'source')"
                 class="diff-textarea absolute inset-0 m-0 w-full h-full p-2 font-mono text-sm leading-6 resize-none outline-none whitespace-pre-wrap border-none overflow-auto scrollbar-hide"
                 wrap="soft" spellcheck="false" :placeholder="t('pasteSource')" style="word-break: normal"></textarea>
             </div>
@@ -316,7 +333,7 @@ onUnmounted(() => {
 
         <!-- Center: Slim Diff Bar -->
         <DiffBar ref="diffBarRef" :title="t('textDiffShort') || t('diffResult')" :items="diffBarItems"
-          :active-index="currentChangeIdx >= 0 ? changeIndices[currentChangeIdx] : -1" @item-click="handleScroll" />
+          :active-index="currentChangeIdx >= 0 ? changeIndices[currentChangeIdx] : -1" @item-click="onItemScroll" />
 
         <!-- Target Panel -->
         <div
@@ -339,7 +356,7 @@ onUnmounted(() => {
           </div>
           <div class="relative flex-1 group w-full h-full overflow-hidden">
             <!-- Line Numbers -->
-            <div
+            <div ref="rightLineNumberRef"
               class="absolute left-0 top-0 bottom-0 w-10 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex-shrink-0 flex flex-col font-mono text-[10px] text-[var(--color-secondary)] opacity-40 select-none text-right px-2 py-2 overflow-hidden">
               <div v-for="line in rightLines" :key="'ln-r-' + line.lineNum" class="h-6 leading-6">
                 {{ line.lineNum }}
@@ -348,11 +365,12 @@ onUnmounted(() => {
             <!-- Diff Highlights + Textarea -->
             <div class="absolute left-10 right-0 top-0 bottom-0">
               <!-- Highlight layer -->
-              <pre v-if="isTargetHighlighted" :ref="setTargetHighlightRef"
+              <pre v-if="isTargetHighlighted" ref="targetHighlightRef"
                 class="highlight-layer absolute inset-0 m-0 p-2 font-mono text-sm leading-6 whitespace-pre-wrap break-all pointer-events-none overflow-auto scrollbar-hide"
                 v-html="diffHighlightedTarget"></pre>
               <!-- Textarea -->
-              <textarea ref="rightTextareaRef" v-model="targetText" @scroll="onRightScroll" @keydown="onRightKeydown"
+              <textarea ref="rightTextareaRef" v-model="targetText" @scroll="onTextScroll($event, 'target')"
+                @keydown="onTextKeydown($event, 'target')"
                 class="diff-textarea absolute inset-0 m-0 w-full h-full p-2 font-mono text-sm leading-6 resize-none outline-none whitespace-pre-wrap border-none overflow-auto scrollbar-hide"
                 wrap="soft" spellcheck="false" :placeholder="t('pasteTarget')" style="word-break: normal"></textarea>
             </div>
@@ -514,6 +532,12 @@ onUnmounted(() => {
 
 :deep(.diff-line-insert) {
   background-color: rgba(152, 195, 121, 0.2);
+  display: inline-block;
+  width: 100%;
+}
+
+:deep(.diff-line-modify) {
+  background-color: rgba(234, 179, 8, 0.2);
   display: inline-block;
   width: 100%;
 }

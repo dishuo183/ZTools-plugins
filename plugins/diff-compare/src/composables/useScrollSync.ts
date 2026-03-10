@@ -1,15 +1,37 @@
+/**
+ * 滚动同步Composable
+ * 实现表格/网格视图中的源表和目标表同步滚动功能
+ */
+
 import { ref, onUnmounted, type Ref } from 'vue'
 
+/**
+ * 滚动同步Composable
+ * @param viewMode - 视图模式引用（split/unified）
+ */
 export function useScrollSync(viewMode: Ref<string>) {
+    /** 源表格元素引用 */
     const sourceTableRef = ref<HTMLElement | null>(null)
+    /** 目标表格元素引用 */
     const targetTableRef = ref<HTMLElement | null>(null)
+    /** 差异条元素引用 */
     const diffBarRef = ref<HTMLElement | null>(null)
 
+    /** 是否正在执行程序化滚动（避免循环触发） */
     let isProgrammaticScroll = false
+    /** 滚动超时定时器 */
     let scrollTimeout: ReturnType<typeof setTimeout> | null = null
+    /** 当前滚动目标元素 */
     let activeScrollTarget: HTMLElement | null = null
+    /** 同步滚动超时定时器 */
     let syncScrollTimeout: ReturnType<typeof setTimeout> | null = null
 
+    /**
+     * 滚动到指定单元格
+     * @param row - 行索引
+     * @param col - 列索引
+     * @param getElement - 获取元素的函数
+     */
     const scrollToCell = (row: number, col: number, getElement: (r: number, c: number) => HTMLElement | null) => {
         const el = getElement(row, col)
         if (!el) return
@@ -25,6 +47,11 @@ export function useScrollSync(viewMode: Ref<string>) {
         })
     }
 
+    /**
+     * 同步滚动处理函数
+     * 在 split 模式下同步源表、目标表和差异条的滚动位置
+     * @param e - 滚动事件对象
+     */
     const syncScroll = (e: Event) => {
         if (isProgrammaticScroll || viewMode.value !== 'split') return
         const source = sourceTableRef.value

@@ -26,6 +26,7 @@ const zh = {
   computing: '正在计算差异...',
 
   // Text Diff
+  text: "文本",
   textMode: '文本对比',
   textSplit: '并排对比',
   textUnified: '合并对比',
@@ -95,6 +96,7 @@ const zh = {
   pdfEmptyLine: '空行',
   page: '页',
   ocrInitializing: '正在初始化OCR引擎...',
+  ocrProcessing: '正在处理PDF...',
 }
 
 export default zh

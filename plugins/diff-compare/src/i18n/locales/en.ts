@@ -26,6 +26,7 @@ const en = {
   computing: 'Computing Diff...',
 
   // Text Diff
+  text: "Text",
   textMode: 'Text Mode',
   textSplit: "Split View",
   textUnified: "Unified View",
@@ -95,6 +96,7 @@ const en = {
   pdfEmptyLine: 'Empty line',
   page: 'Page',
   ocrInitializing: 'Initializing OCR engine...',
+  ocrProcessing: 'Processing PDF...',
 }
 
 export default en

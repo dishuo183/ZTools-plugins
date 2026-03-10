@@ -4,11 +4,11 @@ import { useI18n } from "vue-i18n";
 import ZBadge from "@/components/ui/ZBadge.vue";
 import ZButton from "@/components/ui/ZButton.vue";
 import ZTooltip from "@/components/ui/ZTooltip.vue";
+import ZIcon from "@/components/ui/ZIcon.vue";
 import FileDropzone from "@/components/shared/FileDropzone.vue";
 import DiffBar from "@/components/shared/DiffBar.vue";
 import DiffLegend from "@/components/shared/DiffLegend.vue";
 import PrevNextButtons from "@/components/shared/PrevNextButtons.vue";
-import ZIcon from "@/components/ui/ZIcon.vue";
 import { useWordDiff } from "@/composables/useWord";
 
 const { t } = useI18n();
@@ -64,7 +64,7 @@ onUnmounted(() => {
         </ZBadge>
         <ZBadge v-else :title="t('wordSource')" variant="surface" size="lg">{{
           t("wordSource")
-        }}</ZBadge>
+          }}</ZBadge>
       </div>
 
       <!-- 中间：差异数量 + 导航 + 清空 -->
@@ -81,17 +81,12 @@ onUnmounted(() => {
           </div>
           <span v-else class="text-xs text-[var(--color-secondary)]">{{
             t("wordNoDiff")
-          }}</span>
+            }}</span>
         </template>
         <ZTooltip :content="t('clearItems')" v-if="bothLoaded">
           <ZButton variant="ghost" size="icon-sm" @click="clearItems"
             class="!w-6 !h-6 text-[var(--color-secondary)] hover:text-[var(--color-text)]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2.5">
-              <path d="M3 6h18" />
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-            </svg>
+            <ZIcon name="trash" :size="14" />
           </ZButton>
         </ZTooltip>
       </div>
@@ -111,25 +106,13 @@ onUnmounted(() => {
         <FileDropzone side="source" :title="t('wordSource')" :hint="t('uploadWord')" :is-ready="!!sourceFileName"
           :fileName="sourceFileName" accept=".docx,.doc" @change="handleFile($event, 'source')">
           <template #icon>
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2">
-              <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4" />
-              <polyline points="14 2 14 8 20 8" />
-              <path d="M2 15h10" />
-              <path d="m9 18 3-3-3-3" />
-            </svg>
+            <ZIcon name="file-word" :size="28" />
           </template>
         </FileDropzone>
         <FileDropzone side="target" :title="t('wordTarget')" :hint="t('uploadWord')" :is-ready="!!targetFileName"
           :fileName="targetFileName" accept=".docx,.doc" @change="handleFile($event, 'target')">
           <template #icon>
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2">
-              <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4" />
-              <polyline points="14 2 14 8 20 8" />
-              <path d="M2 15h10" />
-              <path d="m9 18 3-3-3-3" />
-            </svg>
+            <ZIcon name="file-word" :size="28" />
           </template>
         </FileDropzone>
       </div>

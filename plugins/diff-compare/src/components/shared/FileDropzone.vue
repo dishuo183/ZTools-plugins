@@ -1,15 +1,32 @@
 <script setup lang="ts">
+/**
+ * 文件拖放区域组件
+ * 提供文件拖放上传功能，支持源文件和目标文件
+ */
+
 import ZIcon from '@/components/ui/ZIcon.vue'
 
+/**
+ * 组件属性
+ */
 defineProps<{
+    /** 文件侧：source-源文件, target-目标文件 */
     side: 'source' | 'target'
+    /** 标题文本 */
     title: string
+    /** 提示文本 */
     hint: string
+    /** 是否已准备好（文件已上传） */
     isReady: boolean
+    /** 文件名称（可选） */
     fileName?: string
+    /** 接受的文件类型（MIME类型） */
     accept: string
 }>()
 
+/**
+ * 事件定义
+ */
 defineEmits<{
     change: [e: Event]
 }>()
