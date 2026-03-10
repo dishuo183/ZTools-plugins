@@ -6,6 +6,7 @@ import ZTooltip from "@/components/ui/base/ZTooltip.vue";
 import ZButton from "@/components/ui/base/ZButton.vue";
 import ZBadge from "@/components/ui/base/ZBadge.vue";
 import ZIcon from "@/components/ui/ZIcon.vue";
+import DiffBar from "@/components/shared/DiffBar.vue";
 import { detectLanguage } from "@/utils/formatter";
 import { useTextDiff } from "@/composables/useTextDiff";
 import { useAutoFormat } from "@/composables/useAutoFormat";
@@ -52,6 +53,15 @@ const leftTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const rightTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const sourceHighlightRef = ref<HTMLElement | null>(null)
 const targetHighlightRef = ref<HTMLElement | null>(null)
+const diffBarRef = ref<HTMLElement | null>(null)
+
+const diffBarItems = computed(() => {
+  return diffLines.value.map(line => ({
+    type: line.type,
+    sourceText: line.type === 'delete' ? line.value : undefined,
+    targetText: line.type === 'insert' ? line.value : undefined,
+  }))
+})
 
 const setSourceHighlightRef = (el: HTMLElement | null) => {
   sourceHighlightRef.value = el
@@ -60,19 +70,6 @@ const setSourceHighlightRef = (el: HTMLElement | null) => {
 const setTargetHighlightRef = (el: HTMLElement | null) => {
   targetHighlightRef.value = el
 }
-
-onMounted(() => {
-  const unregisterLeft = registerScrollCallback((scrollTop) => {
-    leftTextareaRef.value?.scrollTo(0, scrollTop)
-  })
-  const unregisterRight = registerScrollCallback((scrollTop) => {
-    rightTextareaRef.value?.scrollTo(0, scrollTop)
-  })
-  onUnmounted(() => {
-    unregisterLeft()
-    unregisterRight()
-  })
-})
 
 // 使用从 useSyntaxHighlight 导出的语言选项
 const langOptionsWithI18n = computed(() => {
@@ -91,13 +88,15 @@ const targetLang = computed(() => {
   return detectLanguage(targetText.value);
 });
 
-watch([sourceText, sourceLang], ([text, lang]) => {
-  highlightSource(text || '', lang)
-})
+const getLangLabel = (langValue: string) => {
+  const opt = langOptions.value.find(
+    (o) => o.value === langValue.toLowerCase(),
+  );
+  return opt ? opt.label : langValue.toUpperCase() || "Text";
+};
 
-watch([targetText, targetLang], ([text, lang]) => {
-  highlightTarget(text || '', lang)
-})
+const sourceLangLabel = computed(() => getLangLabel(sourceLang.value));
+const targetLangLabel = computed(() => getLangLabel(targetLang.value));
 
 // 带差异高亮的源代码（按行处理）
 const diffHighlightedSource = computed(() => {
@@ -119,24 +118,6 @@ const diffHighlightedTarget = computed(() => {
     const diffType = diffLine?.type
     return highlightWithDiff(line, targetLang.value, diffType)
   }).join('\n')
-})
-
-const getLangLabel = (langValue: string) => {
-  const opt = langOptions.value.find(
-    (o) => o.value === langValue.toLowerCase(),
-  );
-  return opt ? opt.label : langValue.toUpperCase() || "Text";
-};
-
-const sourceLangLabel = computed(() => getLangLabel(sourceLang.value));
-const targetLangLabel = computed(() => getLangLabel(targetLang.value));
-
-watch(sourceText, () => {
-  scheduleAutoFormat(sourceText, selectedLang.value, "source")
-})
-
-watch(targetText, () => {
-  scheduleAutoFormat(targetText, selectedLang.value, "target")
 })
 
 const onLeftScroll = (e: Event) => {
@@ -188,6 +169,47 @@ const onRightKeydown = (e: KeyboardEvent) => {
     })
   }
 }
+
+watch([sourceText, sourceLang], ([text, lang]) => {
+  highlightSource(text || '', lang)
+})
+
+watch([targetText, targetLang], ([text, lang]) => {
+  highlightTarget(text || '', lang)
+})
+
+watch(sourceText, () => {
+  scheduleAutoFormat(sourceText, selectedLang.value, "source")
+})
+
+watch(targetText, () => {
+  scheduleAutoFormat(targetText, selectedLang.value, "target")
+})
+
+const handleScroll = (idx: number) => {
+  const scrollTop = idx * 24
+  leftTextareaRef.value?.scrollTo(0, scrollTop)
+  rightTextareaRef.value?.scrollTo(0, scrollTop)
+  if (sourceHighlightRef.value) sourceHighlightRef.value.scrollTop = scrollTop
+  if (targetHighlightRef.value) targetHighlightRef.value.scrollTop = scrollTop
+}
+
+let unregisterLeft: (() => void) | undefined
+let unregisterRight: (() => void) | undefined
+
+onMounted(() => {
+  unregisterLeft = registerScrollCallback((scrollTop) => {
+    leftTextareaRef.value?.scrollTo(0, scrollTop)
+  })
+  unregisterRight = registerScrollCallback((scrollTop) => {
+    rightTextareaRef.value?.scrollTo(0, scrollTop)
+  })
+})
+
+onUnmounted(() => {
+  unregisterLeft?.()
+  unregisterRight?.()
+})
 </script>
 
 <template>
@@ -250,17 +272,17 @@ const onRightKeydown = (e: KeyboardEvent) => {
 
     <div class="flex-1 min-h-[400px] overflow-hidden diff-scroll-container">
       <!-- SPLIT MODE -->
-      <div v-if="textViewMode === 'split'" class="grid grid-cols-2 gap-4 h-full">
+      <div v-if="textViewMode === 'split'" class="grid grid-cols-[1fr_64px_1fr] gap-0 h-full">
         <!-- Source Panel -->
         <div
-          class="flex flex-col h-full rounded-lg border border-[var(--color-border)] overflow-hidden shadow-sm focus-within:ring-2 transition-all bg-[var(--color-background)]">
+          class="flex flex-col h-full rounded-l-lg border-y border-l border-[var(--color-border)] overflow-hidden shadow-sm focus-within:ring-2 transition-all bg-[var(--color-background)]">
           <div
             class="bg-[var(--color-background)] px-3 py-2 border-b border-[var(--color-border)] flex justify-between items-center h-10">
             <div class="flex items-center gap-2">
               <ZBadge variant="surface" size="lg">
                 <template #default>
                   <div class="flex items-center gap-1.5">
-                    <Icon name="text" :size="12" class="opacity-70" />
+                    <ZIcon name="text" :size="12" class="opacity-70" />
                     {{ t("source") }}
                   </div>
                 </template>
@@ -281,30 +303,31 @@ const onRightKeydown = (e: KeyboardEvent) => {
             <!-- Diff Highlights + Textarea -->
             <div class="absolute left-10 right-0 top-0 bottom-0">
               <!-- Highlight layer -->
-              <pre
-                v-if="isSourceHighlighted"
-                :ref="setSourceHighlightRef"
+              <pre v-if="isSourceHighlighted" :ref="setSourceHighlightRef"
                 class="highlight-layer absolute inset-0 m-0 p-2 font-mono text-sm leading-6 whitespace-pre-wrap break-all pointer-events-none overflow-auto scrollbar-hide"
-                v-html="diffHighlightedSource"
-              ></pre>
+                v-html="diffHighlightedSource"></pre>
               <!-- Textarea -->
               <textarea ref="leftTextareaRef" v-model="sourceText" @scroll="onLeftScroll" @keydown="onLeftKeydown"
-                class="diff-textarea absolute inset-0 m-0 w-full h-full p-2 font-mono text-sm leading-6 resize-none outline-none whitespace-pre-wrap break-all border-none overflow-auto scrollbar-hide"
-                wrap="soft" spellcheck="false" :placeholder="t('pasteSource')"></textarea>
+                class="diff-textarea absolute inset-0 m-0 w-full h-full p-2 font-mono text-sm leading-6 resize-none outline-none whitespace-pre-wrap border-none overflow-auto scrollbar-hide"
+                wrap="soft" spellcheck="false" :placeholder="t('pasteSource')" style="word-break: normal"></textarea>
             </div>
           </div>
         </div>
 
+        <!-- Center: Slim Diff Bar -->
+        <DiffBar ref="diffBarRef" :title="t('textDiffShort') || t('diffResult')" :items="diffBarItems"
+          :active-index="currentChangeIdx >= 0 ? changeIndices[currentChangeIdx] : -1" @item-click="handleScroll" />
+
         <!-- Target Panel -->
         <div
-          class="flex flex-col h-full rounded-lg border border-[var(--color-border)] overflow-hidden shadow-sm focus-within:ring-2 transition-all bg-[var(--color-background)]">
+          class="flex flex-col h-full rounded-r-lg border-y border-r border-[var(--color-border)] overflow-hidden shadow-sm focus-within:ring-2 transition-all bg-[var(--color-background)]">
           <div
             class="bg-[var(--color-background)] px-3 py-2 border-b border-[var(--color-border)] flex justify-between items-center h-10">
             <div class="flex items-center gap-2">
               <ZBadge variant="surface" size="lg">
                 <template #default>
                   <div class="flex items-center gap-1.5">
-                    <Icon name="text" :size="12" class="opacity-70" />
+                    <ZIcon name="text" :size="12" class="opacity-70" />
                     {{ t("target") }}
                   </div>
                 </template>
@@ -325,16 +348,13 @@ const onRightKeydown = (e: KeyboardEvent) => {
             <!-- Diff Highlights + Textarea -->
             <div class="absolute left-10 right-0 top-0 bottom-0">
               <!-- Highlight layer -->
-              <pre
-                v-if="isTargetHighlighted"
-                :ref="setTargetHighlightRef"
+              <pre v-if="isTargetHighlighted" :ref="setTargetHighlightRef"
                 class="highlight-layer absolute inset-0 m-0 p-2 font-mono text-sm leading-6 whitespace-pre-wrap break-all pointer-events-none overflow-auto scrollbar-hide"
-                v-html="diffHighlightedTarget"
-              ></pre>
+                v-html="diffHighlightedTarget"></pre>
               <!-- Textarea -->
               <textarea ref="rightTextareaRef" v-model="targetText" @scroll="onRightScroll" @keydown="onRightKeydown"
-                class="diff-textarea absolute inset-0 m-0 w-full h-full p-2 font-mono text-sm leading-6 resize-none outline-none whitespace-pre-wrap break-all border-none overflow-auto scrollbar-hide"
-                wrap="soft" spellcheck="false" :placeholder="t('pasteTarget')"></textarea>
+                class="diff-textarea absolute inset-0 m-0 w-full h-full p-2 font-mono text-sm leading-6 resize-none outline-none whitespace-pre-wrap border-none overflow-auto scrollbar-hide"
+                wrap="soft" spellcheck="false" :placeholder="t('pasteTarget')" style="word-break: normal"></textarea>
             </div>
           </div>
         </div>
@@ -488,13 +508,13 @@ const onRightKeydown = (e: KeyboardEvent) => {
 
 :deep(.diff-line-delete) {
   background-color: rgba(224, 108, 117, 0.2);
-  display: block;
+  display: inline-block;
   width: 100%;
 }
 
 :deep(.diff-line-insert) {
   background-color: rgba(152, 195, 121, 0.2);
-  display: block;
+  display: inline-block;
   width: 100%;
 }
 </style>

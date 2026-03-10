@@ -8,22 +8,37 @@ interface ParagraphBlock {
     type: 'equal' | 'delete' | 'insert' | 'modify'
     sourceText: string
     targetText: string
+    sourceHtml?: string
+    targetHtml?: string
 }
 
-function extractParagraphs(html: string): string[] {
+interface ParsedParagraph {
+    text: string
+    html: string
+}
+
+function extractParagraphs(html: string): ParsedParagraph[] {
     if (!html.trim()) return []
     const div = document.createElement('div')
     div.innerHTML = html
     const blocks = div.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li')
-    const texts: string[] = []
+    const paragraphs: ParsedParagraph[] = []
     blocks.forEach(el => {
         const text = (el.textContent || '').trim()
-        if (text) texts.push(text)
+        if (text) {
+            paragraphs.push({
+                text: text,
+                html: el.outerHTML
+            })
+        }
     })
-    if (texts.length === 0 && html.trim()) {
-        texts.push(div.textContent?.trim() || '')
+    if (paragraphs.length === 0 && html.trim()) {
+        paragraphs.push({
+            text: div.textContent?.trim() || '',
+            html: html
+        })
     }
-    return texts
+    return paragraphs
 }
 
 export function useWordDiff() {
@@ -70,8 +85,11 @@ export function useWordDiff() {
                     }
                 }
                 diffWorker!.addEventListener('message', handler)
-                diffWorker!.postMessage({ type: 'word', source: src, target: tgt, requestId })
+                diffWorker!.postMessage({ type: 'word', source: src.map(p => p.text), target: tgt.map(p => p.text), requestId })
             })
+
+            const srcMap = new Map(src.map((p, i) => [p.text, p.html]))
+            const tgtMap = new Map(tgt.map((p, i) => [p.text, p.html]))
 
             const blocks: ParagraphBlock[] = []
             for (const result of workerResult) {
@@ -80,24 +98,32 @@ export function useWordDiff() {
                         type: 'equal',
                         sourceText: result.source as string || '',
                         targetText: result.target as string || '',
+                        sourceHtml: srcMap.get(result.source as string) || result.source as string,
+                        targetHtml: tgtMap.get(result.target as string) || result.target as string,
                     })
                 } else if (result.type === 'delete') {
                     blocks.push({
                         type: 'delete',
                         sourceText: result.source as string || '',
                         targetText: '',
+                        sourceHtml: srcMap.get(result.source as string) || result.source as string,
+                        targetHtml: '',
                     })
                 } else if (result.type === 'insert') {
                     blocks.push({
                         type: 'insert',
                         sourceText: '',
                         targetText: result.target as string || '',
+                        sourceHtml: '',
+                        targetHtml: tgtMap.get(result.target as string) || result.target as string,
                     })
                 } else if (result.type === 'modify') {
                     blocks.push({
                         type: 'modify',
                         sourceText: result.source as string || '',
                         targetText: result.target as string || '',
+                        sourceHtml: srcMap.get(result.source as string) || result.source as string,
+                        targetHtml: tgtMap.get(result.target as string) || result.target as string,
                     })
                 }
             }

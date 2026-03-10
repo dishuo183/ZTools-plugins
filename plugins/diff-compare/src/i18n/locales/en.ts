@@ -27,8 +27,9 @@ const en = {
 
   // Text Diff
   textMode: 'Text Mode',
-  textSplit:"Split View",
-  textUnified:"Unified View",
+  textSplit: "Split View",
+  textUnified: "Unified View",
+  textDiffShort: 'Diff',
   autoFormat: 'Auto-Format on Paste',
   pasteSource: 'Paste source text here...',
   pasteTarget: 'Paste target text here...',
@@ -78,7 +79,6 @@ const en = {
   wordDiffWaitingHint: 'The diff list will appear here after both sides are loaded.',
   wordNoDiff: 'No paragraph differences found',
   wordNoDiffHint: 'Both documents currently contain the same paragraph content.',
-  wordEmptyParagraph: 'Empty paragraph',
   wordCompareView: 'Side by Side',
   wordHighlightView: 'Highlight Diff',
 

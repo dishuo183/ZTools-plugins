@@ -151,9 +151,7 @@ onUnmounted(() => {
               block.type === 'modify' && 'bg-[var(--color-delete-bg)]',
               activeBlockIdx === idx && 'ring-2 ring-[var(--color-cta)]',
             ]">
-              <div class="text-[var(--color-text)] whitespace-pre-wrap">
-                {{ block.sourceText || t("wordEmptyParagraph") }}
-              </div>
+              <div class="text-[var(--color-text)]" v-html="block.sourceHtml"></div>
             </div>
           </div>
         </div>
@@ -171,9 +169,7 @@ onUnmounted(() => {
               block.type === 'modify' && 'bg-[var(--color-insert-bg)]',
               activeBlockIdx === idx && 'ring-2 ring-[var(--color-cta)]',
             ]">
-              <div class="text-[var(--color-text)] whitespace-pre-wrap">
-                {{ block.targetText || t("wordEmptyParagraph") }}
-              </div>
+              <div class="text-[var(--color-text)]" v-html="block.targetHtml"></div>
             </div>
           </div>
         </div>
@@ -209,9 +205,6 @@ onUnmounted(() => {
 .word-doc-panel {
   font-size: 14px;
   line-height: 1.6;
-}
-
-.word-html {
 
   :deep(p),
   :deep(h1),
@@ -221,20 +214,94 @@ onUnmounted(() => {
   :deep(h5),
   :deep(h6),
   :deep(li),
-  :deep(td) {
+  :deep(td),
+  :deep(div),
+  :deep(span),
+  :deep(table),
+  :deep(tr),
+  :deep(th) {
     margin: 0 0 0.5em 0;
+    color: inherit;
 
     &:last-child {
       margin-bottom: 0;
     }
   }
 
-  :deep(strong) {
+  :deep(h1) {
+    font-size: 2em;
+    font-weight: bold;
+  }
+
+  :deep(h2) {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+
+  :deep(h3) {
+    font-size: 1.25em;
+    font-weight: bold;
+  }
+
+  :deep(h4) {
+    font-size: 1em;
+    font-weight: bold;
+  }
+
+  :deep(strong),
+  :deep(b) {
     font-weight: 700;
   }
 
-  :deep(em) {
+  :deep(em),
+  :deep(i) {
     font-style: italic;
+  }
+
+  :deep(u) {
+    text-decoration: underline;
+  }
+
+  :deep(ul),
+  :deep(ol) {
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+  }
+
+  :deep(li) {
+    margin: 0.25em 0;
+  }
+
+  :deep(table) {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.5em 0;
+  }
+
+  :deep(td),
+  :deep(th) {
+    border: 1px solid var(--color-border);
+    padding: 0.25em 0.5em;
+  }
+
+  :deep(a) {
+    color: var(--color-cta);
+    text-decoration: underline;
+  }
+
+  :deep(code) {
+    font-family: monospace;
+    background: var(--color-surface);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+  }
+
+  :deep(pre) {
+    font-family: monospace;
+    background: var(--color-surface);
+    padding: 0.5em;
+    border-radius: 3px;
+    overflow-x: auto;
   }
 }
 

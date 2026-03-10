@@ -16,14 +16,14 @@
       "code": "diff-main",
       "explain": "代码对比工具，支持文本、图片、Excel、Word、PDF",
       "icon": "logo.png",
-      "cmds": ["对比", "diff", "代码对比", "compare"]
+      "cmds": ["diff", "diff-compare"]
     },
     {
       "code": "diff-text",
       "explain": "文本差异对比",
       "icon": "logo.png",
       "cmds": [
-        "文本对比",
+        "diff-text",
         {
           "type": "over",
           "label": "文本对比"
@@ -35,7 +35,7 @@
       "explain": "图片差异对比",
       "icon": "logo.png",
       "cmds": [
-        "图片对比",
+        "diff-image",
         {
           "type": "img",
           "label": "图片对比"
@@ -54,8 +54,7 @@
       "explain": "Excel 表格对比",
       "icon": "logo.png",
       "cmds": [
-        "Excel对比",
-        "表格对比",
+        "diff-excel",
         {
           "type": "files",
           "fileType": "file",
@@ -70,8 +69,7 @@
       "explain": "Word 文档对比",
       "icon": "logo.png",
       "cmds": [
-        "Word对比",
-        "文档对比",
+        "diff-word",
         {
           "type": "files",
           "fileType": "file",
@@ -86,7 +84,7 @@
       "explain": "PDF 文档对比",
       "icon": "logo.png",
       "cmds": [
-        "PDF对比",
+        "diff-pdf",
         {
           "type": "files",
           "fileType": "file",

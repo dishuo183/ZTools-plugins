@@ -29,6 +29,7 @@ const zh = {
   textMode: '文本对比',
   textSplit: '并排对比',
   textUnified: '合并对比',
+  textDiffShort: '差异',
   autoFormat: '粘贴自动格式化',
   pasteSource: '在此粘贴源内容...',
   pasteTarget: '在此粘贴目标内容...',
@@ -78,7 +79,6 @@ const zh = {
   wordDiffWaitingHint: '两侧都加载完成后，这里会生成差异列表。',
   wordNoDiff: '未发现段落差异',
   wordNoDiffHint: '两份文档的段落内容目前一致。',
-  wordEmptyParagraph: '空段落',
   wordCompareView: '左右对比',
   wordHighlightView: '差异高亮',
 

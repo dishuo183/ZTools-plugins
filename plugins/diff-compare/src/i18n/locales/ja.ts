@@ -29,6 +29,7 @@ const ja = {
   textMode: 'テキスト比較',
   textSplit: '並べて比較',
   textUnified: '統合比較',
+  textDiffShort: '差分',
   autoFormat: '貼り付け時に自動整形',
   pasteSource: 'ここにソース内容を貼り付けてください...',
   pasteTarget: 'ここにターゲット内容を貼り付けてください...',
@@ -78,7 +79,6 @@ const ja = {
   wordDiffWaitingHint: '両方が読み込まれると、ここに差異リストが生成されます。',
   wordNoDiff: '段落の差異は見つかりませんでした',
   wordNoDiffHint: '両方のドキュメントの段落内容は現在一致しています。',
-  wordEmptyParagraph: '空の段落',
   wordCompareView: '左右比較',
   wordHighlightView: '差異ハイライト',
 
