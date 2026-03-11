@@ -22,7 +22,6 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@types/diff": "^8.0.0",
     "@types/js-beautify": "^1.14.3",
     "@types/pixelmatch": "^5.2.6",
     "@vitejs/plugin-vue": "^5.2.1",

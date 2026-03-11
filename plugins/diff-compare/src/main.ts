@@ -19,4 +19,4 @@ const app = createApp(App)
  * - i18n: 国际化支持
  */
 app.use(i18n)
-.mount('#app')
+  .mount('#app')

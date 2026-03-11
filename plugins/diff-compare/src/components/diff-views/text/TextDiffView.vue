@@ -7,12 +7,8 @@
 
 import { ref, computed, watch, watchEffect, onMounted, onUnmounted, shallowRef } from "vue";
 import { useI18n } from "vue-i18n";
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import ZSelect from "@/components/ui/ZSelect.vue";
 import ZTooltip from "@/components/ui/ZTooltip.vue";
 import ZButton from "@/components/ui/ZButton.vue";
@@ -26,17 +22,10 @@ import { debounce } from "@/utils/common";
 
 /**
  * Monaco Editor 环境配置
- * 根据不同的语言类型返回对应的 Web Worker
- * @param _ - 未使用的参数
- * @param label - Monaco Editor 语言标识符
- * @returns 对应的 Worker 实例
+ * 只使用基础 editor worker，禁用语言服务以提升性能
  */
 self.MonacoEnvironment = {
-  getWorker(_: any, label: string) {
-    if (label === 'json') return new jsonWorker();
-    if (label === 'css' || label === 'scss' || label === 'less') return new cssWorker();
-    if (label === 'html' || label === 'handlebars' || label === 'razor') return new htmlWorker();
-    if (label === 'typescript' || label === 'javascript') return new tsWorker();
+  getWorker() {
     return new editorWorker();
   }
 };
@@ -226,6 +215,8 @@ const initMonacoEditor = () => {
     minimap: { enabled: false },                           // 禁用小地图
     scrollBeyondLastLine: false,                           // 禁用滚动超过最后一行
     renderSideBySide: textViewMode.value === 'split',      // 分屏或内联模式
+    useInlineViewWhenSpaceIsLimited: false,                // 禁用内联视图
+    splitViewDefaultRatio: 0.5,                            // 左右分屏各占 50%
     readOnly: false,                                       // 可编辑
     enableSplitViewResizing: true,                         // 允许调整分屏大小
     ignoreTrimWhitespace: false,                           // 不忽略空白字符差异
