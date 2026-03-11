@@ -31,7 +31,10 @@ const ja = {
   textSplit: '並べて比較',
   textUnified: '統合比較',
   textDiffShort: '差分',
-  autoFormat: '貼り付け時に自動整形',
+  autoFormat: '自動整形',
+  autoFormatOff: 'オフ',
+  autoFormatDelayed: '3秒後に整形',
+  autoFormatImmediate: 'すぐに整形',
   pasteSource: 'ここにソース内容を貼り付けてください...',
   pasteTarget: 'ここにターゲット内容を貼り付けてください...',
 

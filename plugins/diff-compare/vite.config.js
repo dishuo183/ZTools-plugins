@@ -31,6 +31,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
+          'text-lib': ['monaco-editor'],
           'pdf-lib': ['pdfjs-dist'],
           'word-lib': ['mammoth'],
           'excel-lib': ['xlsx'],

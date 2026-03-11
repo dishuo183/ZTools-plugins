@@ -91,13 +91,14 @@ const usageItems = computed(() => {
 })
 
 const autoFormatValue = computed({
-    get: () => autoFormat.value ? 'true' : 'false',
-    set: (v) => { setAutoFormat(v === 'true') }
+    get: () => autoFormat.value,
+    set: (v) => { setAutoFormat(v) }
 })
 
 const formatOptions = computed(() => [
-    { label: t('enabled'), value: 'true' },
-    { label: t('disabled'), value: 'false' }
+    { label: t('autoFormatOff'), value: 'off' },
+    { label: t('autoFormatDelayed'), value: 'delayed' },
+    { label: t('autoFormatImmediate'), value: 'immediate' }
 ])
 </script>
 
@@ -112,7 +113,7 @@ const formatOptions = computed(() => [
                 <header class="sp-header">
                     <div class="sp-header-title">
                         <!-- Settings gear icon -->
-                        <Icon name="settings" :size="16" class="sp-header-icon" />
+                        <ZIcon name="settings" :size="16" class="sp-header-icon" />
                         <span>{{ locale === 'zh' ? '设置' : (locale === 'ja' ? '設定' : 'Settings') }}</span>
                     </div>
                     <button class="sp-close" @click="emit('close')"

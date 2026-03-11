@@ -7,6 +7,8 @@ import { watch, type Ref } from 'vue'
 import { formatCode } from '@/utils/formatter'
 import { useAutoFormatSettings } from '@/composables/useAutoFormat'
 
+const DELAYED_FORMAT_MS = 3000
+
 /**
  * 自动格式化Composable
  * 根据设置自动格式化输入的代码
@@ -25,7 +27,7 @@ export function useAutoFormat() {
      * @param lang - 语言类型
      */
     const performAutoFormat = (text: Ref<string>, lang: string) => {
-        if (!autoFormat.value) return
+        if (autoFormat.value === 'off') return
 
         const formatted = formatCode(text.value, lang)
         if (formatted !== text.value) {
@@ -35,8 +37,8 @@ export function useAutoFormat() {
 
     watch(
         autoFormat,
-        (enabled) => {
-            if (!enabled) {
+        (mode) => {
+            if (mode === 'off') {
                 clearTimeout(sourceTimer ?? undefined)
                 clearTimeout(targetTimer ?? undefined)
             }
@@ -46,15 +48,18 @@ export function useAutoFormat() {
     return {
         autoFormat,
         scheduleAutoFormat: (text: Ref<string>, lang: string, side: 'source' | 'target') => {
+            if (autoFormat.value === 'off') return
+
             const timer = side === 'source' ? sourceTimer : targetTimer
             if (timer) clearTimeout(timer)
 
-            const newTimer = setTimeout(() => performAutoFormat(text, lang), 1000)
+            const delay = autoFormat.value === 'immediate' ? 10 : DELAYED_FORMAT_MS
+            const newTimer = setTimeout(() => performAutoFormat(text, lang), delay)
             if (side === 'source') sourceTimer = newTimer
             else targetTimer = newTimer
         },
         immediateFormat: (text: Ref<string>, lang: string) => {
-            if (!autoFormat.value) return
+            if (autoFormat.value === 'off') return
             setTimeout(() => performAutoFormat(text, lang), 10)
         }
     }

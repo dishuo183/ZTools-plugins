@@ -1,240 +1,413 @@
 <script setup lang="ts">
 /**
  * 文本差异对比视图组件
- * 提供文本对比功能，包括分屏视图、统一视图、语法高亮和差异导航
+ * 使用 Monaco Editor 提供强大的文本对比功能
+ * 支持语法高亮、多种编程语言、自动语言检测、主题切换等功能
  */
 
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, watchEffect, onMounted, onUnmounted, shallowRef } from "vue";
 import { useI18n } from "vue-i18n";
+import * as monaco from 'monaco-editor';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import ZSelect from "@/components/ui/ZSelect.vue";
 import ZTooltip from "@/components/ui/ZTooltip.vue";
 import ZButton from "@/components/ui/ZButton.vue";
 import ZBadge from "@/components/ui/ZBadge.vue";
 import ZIcon from "@/components/ui/ZIcon.vue";
-import DiffBar, { DiffBarItem } from "@/components/shared/DiffBar.vue";
-import { detectLanguage } from "@/utils/formatter";
-import { useTextDiff } from "@/composables/useText";
 import { useAutoFormat } from "@/composables/useText";
-import { useSyntaxHighlight, langOptions } from "@/composables/useText";
-import 'highlight.js/styles/dark.min.css'
+import { langOptions } from "@/composables/useText";
+import { useTheme } from "@/composables/useTheme";
+import { toMonacoLanguage, detectLanguage } from "@/utils/formatter";
+import { debounce } from "@/utils/common";
 
+/**
+ * Monaco Editor 环境配置
+ * 根据不同的语言类型返回对应的 Web Worker
+ * @param _ - 未使用的参数
+ * @param label - Monaco Editor 语言标识符
+ * @returns 对应的 Worker 实例
+ */
+self.MonacoEnvironment = {
+  getWorker(_: any, label: string) {
+    if (label === 'json') return new jsonWorker();
+    if (label === 'css' || label === 'scss' || label === 'less') return new cssWorker();
+    if (label === 'html' || label === 'handlebars' || label === 'razor') return new htmlWorker();
+    if (label === 'typescript' || label === 'javascript') return new tsWorker();
+    return new editorWorker();
+  }
+};
+
+/**
+ * 国际化翻译函数
+ */
 const { t } = useI18n();
-/** 文本视图模式：split-分屏, unified-统一 */
+
+/**
+ * 文本视图模式：split-分屏对比, unified-内联对比
+ */
 const textViewMode = ref<"split" | "unified">("split");
-/** 选中的编程语言 */
+
+/**
+ * 选中的编程语言
+ * 'auto' 表示自动检测语言
+ */
 const selectedLang = ref("auto");
 
-const {
-  sourceText,
-  targetText,
-  diffLines,
-  isDiffing,
-  leftLines,
-  rightLines,
-  insertedCount,
-  deletedCount,
-  modifiedCount,
-  changeIndices,
-  unifiedDiffLines,
-  currentChangeIdx,
-  goToPrevChange,
-  goToNextChange,
-  registerScrollCallback,
-  totalChanges,
-} = useTextDiff()
+/**
+ * 源文本内容
+ */
+const sourceText = ref('')
 
+/**
+ * 目标文本内容
+ */
+const targetText = ref('')
+
+/**
+ * 自动格式化 composable
+ * 用于在输入时自动格式化代码
+ */
 const { scheduleAutoFormat } = useAutoFormat()
 
-const {
-  highlightSource,
-  highlightTarget,
-  highlightWithDiff,
-  isSourceHighlighted,
-  isTargetHighlighted,
-} = useSyntaxHighlight()
+/**
+ * 主题 composable
+ * isDark: 是否为暗色模式
+ * themeMode: 当前主题模式 (system/light/dark)
+ */
+const { isDark, themeMode } = useTheme()
 
-const leftLineNumberRef = ref<HTMLElement | null>(null)
-const rightLineNumberRef = ref<HTMLElement | null>(null)
-const leftTextareaRef = ref<HTMLTextAreaElement | null>(null)
-const rightTextareaRef = ref<HTMLTextAreaElement | null>(null)
-const sourceHighlightRef = ref<HTMLElement | null>(null)
-const targetHighlightRef = ref<HTMLElement | null>(null)
-const diffBarRef = ref<HTMLElement | null>(null)
-
-const diffBarItems = computed(() => {
-  const itemMapper = {
-    delete: (item: any) => ({ type: 'delete' as const, sourceText: item.value }),
-    insert: (item: any) => ({ type: 'insert' as const, targetText: item.value }),
-    modify: (item: any) => ({
-      type: 'modify' as const,
-      sourceText: item.sourceValue,
-      targetText: item.targetValue
-    }),
-    equal: (item: any) => ({
-      type: 'equal' as const,
-      sourceText: item.value,
-      targetText: item.value
-    })
-  };
-  return diffLines.value.map(item =>
-    itemMapper[item.type](item)
-  );
+/**
+ * Monaco Editor 主题计算属性
+ * 根据应用主题模式返回对应的 Monaco 主题
+ * @returns 'vs' 亮色主题 或 'vs-dark' 暗色主题
+ */
+const monacoTheme = computed(() => {
+  if (themeMode.value === 'light') return 'vs'
+  if (themeMode.value === 'dark') return 'vs-dark'
+  return isDark.value ? 'vs-dark' : 'vs'
 })
 
-// 使用从 useSyntaxHighlight 导出的语言选项
+/**
+ * 更新 Monaco Editor 主题
+ * 当主题变化时调用此函数切换 Monaco 主题
+ */
+const updateTheme = () => {
+  if (!diffEditorRef.value) return;
+  monaco.editor.setTheme(monacoTheme.value);
+};
+
+/**
+ * Monaco Editor 容器 DOM 引用
+ */
+const containerRef = ref<HTMLElement | null>(null)
+
+/**
+ * Monaco Diff Editor 实例
+ * 使用 shallowRef 避免深度响应带来的性能开销
+ */
+const diffEditorRef = shallowRef<monaco.editor.IStandaloneDiffEditor | null>(null)
+
+/**
+ * 左侧（原始）编辑器实例引用
+ */
+const originalEditorRef = shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+
+/**
+ * 右侧（修改后）编辑器实例引用
+ */
+const modifiedEditorRef = shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+
+/**
+ * 带国际化语言选项的计算属性
+ * 将语言选项转换为支持 i18n 的格式
+ * @returns 带有本地化标签的语言选项数组
+ */
 const langOptionsWithI18n = computed(() => {
   return langOptions.value.map(opt =>
     opt.value === "auto" ? { label: t("autoDetect"), value: opt.value } : opt
   )
 })
 
-const sourceLang = computed(() => {
-  if (selectedLang.value !== "auto") return selectedLang.value;
-  return detectLanguage(sourceText.value);
+/**
+ * 源文本检测到的语言
+ */
+const sourceLang = ref('plaintext');
+
+/**
+ * 目标文本检测到的语言
+ */
+const targetLang = ref('plaintext');
+
+/**
+ * 检测源文本编程语言（防抖处理）
+ * 使用 500ms 防抖避免频繁调用语言检测
+ */
+const detectSourceLanguage = debounce((text: string) => {
+  if (selectedLang.value === 'auto' && text) {
+    sourceLang.value = detectLanguage(text);
+  }
+}, 500);
+
+/**
+ * 检测目标文本编程语言（防抖处理）
+ * 使用 500ms 防抖避免频繁调用语言检测
+ */
+const detectTargetLanguage = debounce((text: string) => {
+  if (selectedLang.value === 'auto' && text) {
+    targetLang.value = detectLanguage(text);
+  }
+}, 500);
+
+/**
+ * 监听源文本变化，触发自动语言检测
+ */
+watch(sourceText, (text) => {
+  if (selectedLang.value !== 'auto') return;
+  detectSourceLanguage(text);
 });
 
-const targetLang = computed(() => {
-  if (selectedLang.value !== "auto") return selectedLang.value;
-  return detectLanguage(targetText.value);
+/**
+ * 监听目标文本变化，触发自动语言检测
+ */
+watch(targetText, (text) => {
+  if (selectedLang.value !== 'auto') return;
+  detectTargetLanguage(text);
 });
 
-const getLangLabel = (langValue: string) => {
-  const opt = langOptions.value.find(
-    (o) => o.value === langValue.toLowerCase(),
-  );
-  return opt ? opt.label : langValue.toUpperCase() || "Text";
-};
-// 获取检测到的语言标签
-const sourceLangLabel = computed(() => getLangLabel(sourceLang.value));
-const targetLangLabel = computed(() => getLangLabel(targetLang.value));
-
-// 带差异高亮的源代码（按行处理）
-const diffHighlightedSource = computed(() => {
-  if (!isSourceHighlighted.value) return ''
-  const lines = sourceText.value.split('\n')
-  return lines.map((line, idx) => {
-    const diffLine = leftLines.value.find(l => l.idx === idx)
-    const diffType = diffLine?.type
-    return highlightWithDiff(line, sourceLang.value, diffType)
-  }).join('\n')
-})
-
-// 带差异高亮的目标代码（按行处理）
-const diffHighlightedTarget = computed(() => {
-  if (!isTargetHighlighted.value) return ''
-  const lines = targetText.value.split('\n')
-  return lines.map((line, idx) => {
-    const diffLine = rightLines.value.find(l => l.idx === idx)
-    const diffType = diffLine?.type
-    return highlightWithDiff(line, targetLang.value, diffType)
-  }).join('\n')
-})
-
-const onTextScroll = (e: Event, type: "source" | "target") => {
-  const target = e.target as HTMLTextAreaElement;
-  let highRef = null
-  let textRef = null
-  let lineRef = null
-  if (type === "source") {
-    highRef = sourceHighlightRef
-    textRef = leftTextareaRef
-    lineRef = leftLineNumberRef
+/**
+ * 监听语言选择变化
+ * 当用户手动选择语言或切换到自动检测时更新语言状态
+ */
+watch(selectedLang, () => {
+  if (selectedLang.value !== 'auto') {
+    // 用户手动选择语言
+    sourceLang.value = selectedLang.value;
+    targetLang.value = selectedLang.value;
   } else {
-    highRef = targetHighlightRef
-    textRef = rightTextareaRef
-    lineRef = rightLineNumberRef
+    // 切换到自动检测模式，立即检测当前文本语言
+    sourceLang.value = detectLanguage(sourceText.value);
+    targetLang.value = detectLanguage(targetText.value);
   }
-  requestAnimationFrame(() => {
-    // todo:平滑滚动
-    highRef?.value.scrollTo(0, target.scrollTop);
-    textRef?.value.scrollTo(0, target.scrollTop);
-    lineRef?.value.scrollTo(0, target.scrollTop);
-  })
+  // 更新编辑器的语言设置
+  updateLanguage();
+});
+
+/**
+ * 监听语言检测结果变化
+ * 当自动检测到新语言时更新编辑器
+ */
+watch([sourceLang, targetLang], () => {
+  updateLanguage();
+});
+
+/**
+ * 初始化 Monaco Diff Editor
+ * 创建编辑器实例并配置各项功能
+ */
+const initMonacoEditor = () => {
+  // 防止重复初始化
+  if (!containerRef.value || diffEditorRef.value) return;
+
+  // 设置初始主题
+  monaco.editor.setTheme(monacoTheme.value);
+
+  // 创建 Diff Editor 实例
+  diffEditorRef.value = monaco.editor.createDiffEditor(containerRef.value, {
+    automaticLayout: true,                                 // 自动调整布局
+    theme: monacoTheme.value,                              // 主题
+    fontSize: 14,                                          // 字体大小
+    fontFamily: 'JetBrains Mono, monospace',               // 字体族
+    lineHeight: 24,                                        // 行高
+    fontLigatures: true,                                   // 字体连字
+    minimap: { enabled: false },                           // 禁用小地图
+    scrollBeyondLastLine: false,                           // 禁用滚动超过最后一行
+    renderSideBySide: textViewMode.value === 'split',      // 分屏或内联模式
+    readOnly: false,                                       // 可编辑
+    enableSplitViewResizing: true,                         // 允许调整分屏大小
+    ignoreTrimWhitespace: false,                           // 不忽略空白字符差异
+    originalEditable: true,                                // 左侧编辑器可编辑
+    renderOverviewRuler: true,                             // 显示概览标尺
+    diffWordWrap: 'off',                                   // 禁用差异 word wrap
+    scrollbar: {
+      verticalScrollbarSize: 10,                           // 垂直滚动条宽度
+      horizontalScrollbarSize: 10,                         // 水平滚动条高度
+    },
+  });
+
+  // 获取左右两侧的编辑器实例
+  originalEditorRef.value = diffEditorRef.value.getOriginalEditor();
+  modifiedEditorRef.value = diffEditorRef.value.getModifiedEditor();
+
+  // 监听左侧编辑器内容变化，同步到源文本
+  originalEditorRef.value.onDidChangeModelContent(() => {
+    sourceText.value = originalEditorRef.value?.getValue() || '';
+  });
+
+  // 监听右侧编辑器内容变化，同步到目标文本
+  modifiedEditorRef.value.onDidChangeModelContent(() => {
+    targetText.value = modifiedEditorRef.value?.getValue() || '';
+  });
+
+  // 初始化编辑器内容
+  updateEditorContent();
 }
 
-const onTextKeydown = (e: KeyboardEvent, type: "source" | "target") => {
-  if (e.key === 'Tab') {
-    e.preventDefault()
-    const target = e.target as HTMLTextAreaElement
-    const start = target.selectionStart
-    const end = target.selectionEnd
-    if (type === "source") {
-      sourceText.value = sourceText.value.substring(0, start) + '  ' + sourceText.value.substring(end)
-    } else {
-      targetText.value = targetText.value.substring(0, start) + '  ' + targetText.value.substring(end)
-    }
-    requestAnimationFrame(() => {
-      target.selectionStart = target.selectionEnd = start + 2
-    })
+/**
+ * 更新编辑器内容
+ * 当文本或语言变化时重建 Editor Model
+ */
+const updateEditorContent = () => {
+  if (!diffEditorRef.value) return;
+
+  // 转换语言标识符为 Monaco 格式
+  const sourceMonacoLang = toMonacoLanguage(sourceLang.value);
+  const targetMonacoLang = toMonacoLanguage(targetLang.value);
+
+  // 为左右两侧创建新的 Model
+  const originalModel = monaco.editor.createModel(sourceText.value, sourceMonacoLang);
+  const modifiedModel = monaco.editor.createModel(targetText.value, targetMonacoLang);
+
+  // 设置到 Diff Editor
+  diffEditorRef.value.setModel({
+    original: originalModel,
+    modified: modifiedModel
+  });
+}
+
+/**
+ * 更新编辑器语言
+ * 切换 Monaco Editor 的语法高亮语言
+ */
+const updateLanguage = () => {
+  if (!diffEditorRef.value) return;
+
+  // 转换语言标识符
+  const sourceMonacoLang = toMonacoLanguage(sourceLang.value);
+  const targetMonacoLang = toMonacoLanguage(targetLang.value);
+
+  // 获取当前的 Model
+  const originalModel = diffEditorRef.value.getModel()?.original;
+  const modifiedModel = diffEditorRef.value.getModel()?.modified;
+
+  // 为左右两侧设置语言
+  if (originalModel) {
+    monaco.editor.setModelLanguage(originalModel, sourceMonacoLang);
+  }
+  if (modifiedModel) {
+    monaco.editor.setModelLanguage(modifiedModel, targetMonacoLang);
   }
 }
 
+/**
+ * 更新视图模式
+ * 切换分屏视图和内联视图
+ */
+const updateViewMode = () => {
+  if (!diffEditorRef.value) return;
+  diffEditorRef.value.updateOptions({
+    renderSideBySide: textViewMode.value === 'split'
+  });
+}
+
+/**
+ * 清空文本
+ * 清空源文本和目标文本内容
+ */
 const onTextClear = () => {
   sourceText.value = ''
   targetText.value = ''
+  updateEditorContent()
 }
 
-watch([sourceText, sourceLang], ([text, lang]) => {
-  highlightSource(text || '', lang)
-})
-
-watch([targetText, targetLang], ([text, lang]) => {
-  highlightTarget(text || '', lang)
-})
-
-watch(sourceText, () => {
+/**
+ * 监听文本变化，触发自动格式化
+ */
+watch([sourceText, targetText], () => {
   scheduleAutoFormat(sourceText, selectedLang.value, "source")
-})
-
-watch(targetText, () => {
   scheduleAutoFormat(targetText, selectedLang.value, "target")
 })
 
-const onItemScroll = (idx: number) => {
-  const scrollTop = idx * 24
-  requestAnimationFrame(() => {
-    leftTextareaRef.value?.scrollTo(0, scrollTop)
-    rightTextareaRef.value?.scrollTo(0, scrollTop)
-    if (sourceHighlightRef.value) {
-      sourceHighlightRef.value.scrollTop = scrollTop
-    }
-    if (targetHighlightRef.value) {
-      targetHighlightRef.value.scrollTop = scrollTop
-    }
-  })
-}
-
-let unregisterLeft: (() => void) | undefined
-let unregisterRight: (() => void) | undefined
-
-onMounted(() => {
-  unregisterLeft = registerScrollCallback((scrollTop) => {
-    leftTextareaRef.value?.scrollTo(0, scrollTop)
-  })
-  unregisterRight = registerScrollCallback((scrollTop) => {
-    rightTextareaRef.value?.scrollTo(0, scrollTop)
-  })
+/**
+ * 监听语言选择变化，更新编辑器语言
+ */
+watch(selectedLang, () => {
+  updateLanguage()
 })
 
+/**
+ * 监听视图模式变化
+ */
+watch(textViewMode, () => {
+  updateViewMode()
+})
+
+/**
+ * 监听主题模式变化，自动更新 Monaco 主题
+ * 使用 watchEffect 自动追踪依赖变化
+ */
+watchEffect(() => {
+  const theme = monacoTheme.value
+  if (diffEditorRef.value) {
+    monaco.editor.setTheme(theme)
+  }
+})
+
+/**
+ * 监听文本变化，同步到编辑器
+ * 当文本从外部更新时（如格式化后），同步到 Monaco Editor
+ */
+watch([sourceText, targetText], () => {
+  if (!diffEditorRef.value) return;
+
+  // 获取编辑器当前内容
+  const currentOriginal = originalEditorRef.value?.getValue() || '';
+  const currentModified = modifiedEditorRef.value?.getValue() || '';
+
+  // 如果内容不一致，则更新编辑器
+  if (currentOriginal !== sourceText.value) {
+    originalEditorRef.value?.setValue(sourceText.value);
+  }
+  if (currentModified !== targetText.value) {
+    modifiedEditorRef.value?.setValue(targetText.value);
+  }
+})
+
+/**
+ * 组件挂载时初始化 Monaco Editor
+ */
+onMounted(() => {
+  initMonacoEditor()
+})
+
+/**
+ * 组件卸载时销毁 Monaco Editor 实例
+ * 释放资源，防止内存泄漏
+ */
 onUnmounted(() => {
-  unregisterLeft?.()
-  unregisterRight?.()
+  diffEditorRef.value?.dispose();
 })
 </script>
 
 <template>
   <div class="flex flex-col h-full gap-4">
-    <!-- Toolbar -->
+    <!-- Toolbar: 工具栏 -->
     <div
       class="h-14 border-b border-[var(--color-border)] bg-[var(--color-background)] flex items-center justify-between px-5 flex-shrink-0 z-30 shadow-sm relative w-full">
       <div class="flex items-center gap-3">
+        <!-- Language Selector: 语言选择器 -->
         <div class="flex items-center gap-2">
           <ZBadge variant="surface" size="lg">{{ t("language") }}</ZBadge>
           <ZSelect v-model="selectedLang" :options="langOptionsWithI18n" class="min-w-[120px]" />
         </div>
 
+        <!-- Divider: 分隔线 -->
         <div class="h-4 w-px bg-[var(--color-border)] mx-1"></div>
-        <!-- View Mode -->
+
+        <!-- View Mode: 视图模式切换 -->
         <div class="flex bg-[var(--color-surface)] rounded-md border border-[var(--color-border)] p-1 shadow-sm gap-1">
           <ZButton :variant="textViewMode === 'split' ? 'primary' : 'surface'" size="sm" @click="textViewMode = 'split'"
             class="!rounded-md">
@@ -248,20 +421,8 @@ onUnmounted(() => {
           </ZButton>
         </div>
 
-        <!-- Change Navigation -->
+        <!-- Clear Button: 清空按钮 -->
         <div class="flex items-center gap-1">
-          <ZTooltip :content="t('prevChange') || 'Previous Change'" position="bottom">
-            <ZButton variant="ghost" size="icon-sm" @click="goToPrevChange" :disabled="totalChanges === 0"
-              class="!w-8 !h-8 !p-0">
-              <ZIcon name=" prev" :size="16" />
-            </ZButton>
-          </ZTooltip>
-          <ZTooltip :content="t('nextChange') || 'Next Change'" position="bottom">
-            <ZButton variant="ghost" size="icon-sm" @click="goToNextChange" :disabled="totalChanges === 0"
-              class="!w-8 !h-8 !p-0">
-              <ZIcon name="next" :size="16" />
-            </ZButton>
-          </ZTooltip>
           <ZTooltip :content="t('clearItems')" position="bottom">
             <ZButton variant="ghost" size="icon-sm" @click="onTextClear" :disabled="!sourceText || !targetText"
               class="!w-8 !h-8 !p-0">
@@ -270,275 +431,13 @@ onUnmounted(() => {
           </ZTooltip>
         </div>
       </div>
-      <!-- Change Count -->
-      <div class="flex gap-4 items-center">
-        <div v-if="isDiffing" class="flex items-center">
-          <ZBadge variant="primary" dot pulse size="lg">
-            {{ t("computing") || "Computing" }}
-          </ZBadge>
-        </div>
-        <div class="flex gap-2">
-          <ZBadge variant="success" size="lg">+{{ insertedCount }}</ZBadge>
-          <ZBadge variant="danger" size="lg">-{{ deletedCount }}</ZBadge>
-          <ZBadge variant="warning" size="lg"> {{ modifiedCount }}</ZBadge>
-        </div>
-        <div class="h-4 w-px bg-[var(--color-border)] mx-1"></div>
-      </div>
     </div>
 
-    <div class="flex-1 min-h-[400px] overflow-hidden diff-scroll-container">
-      <!-- SPLIT MODE -->
-      <div v-if="textViewMode === 'split'" class="grid grid-cols-[1fr_64px_1fr] gap-0 h-full">
-        <!-- Source Panel -->
-        <div
-          class="flex flex-col h-full rounded-l-lg border-y border-l border-[var(--color-border)] overflow-hidden shadow-sm focus-within:ring-2 transition-all bg-[var(--color-background)]">
-          <div
-            class="bg-[var(--color-background)] px-3 py-2 border-b border-[var(--color-border)] flex justify-between items-center h-10">
-            <div class="flex items-center gap-2">
-              <ZBadge variant="surface" size="lg">
-                <template #default>
-                  <div class="flex items-center gap-1.5">
-                    <ZIcon name="text" :size="12" class="opacity-70" />
-                    {{ t("source") }}
-                  </div>
-                </template>
-              </ZBadge>
-            </div>
-            <ZBadge variant="primary" dot pulse size="lg">
-              {{ sourceLangLabel }}
-            </ZBadge>
-          </div>
-          <div class="relative flex-1 group w-full h-full overflow-hidden">
-            <!-- Line Numbers -->
-            <div ref="leftLineNumberRef"
-              class="line-number-container absolute left-0 top-0 bottom-0 w-10 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex-shrink-0 flex flex-col font-mono text-[10px] text-[var(--color-secondary)] opacity-40 select-none text-right px-2 py-2 overflow-hidden">
-              <div v-for="line in leftLines" :key="'ln-l-' + line.lineNum" class="h-6 leading-6">
-                {{ line.lineNum }}
-              </div>
-            </div>
-            <!-- Diff Highlights + Textarea -->
-            <div class="absolute left-10 right-0 top-0 bottom-0">
-              <!-- Highlight layer -->
-              <pre v-if="isSourceHighlighted" ref="sourceHighlightRef"
-                class="highlight-layer absolute inset-0 m-0 p-2 font-mono text-sm leading-6 whitespace-pre-wrap break-all pointer-events-none overflow-auto scrollbar-hide"
-                v-html="diffHighlightedSource"></pre>
-              <!-- Textarea -->
-              <textarea ref=" leftTextareaRef" v-model="sourceText" @scroll="onTextScroll($event, 'source')"
-                @keydown="onTextKeydown($event, 'source')"
-                class="diff-textarea absolute inset-0 m-0 w-full h-full p-2 font-mono text-sm leading-6 resize-none outline-none whitespace-pre-wrap border-none overflow-auto scrollbar-hide"
-                wrap="soft" spellcheck="false" :placeholder="t('pasteSource')" style="word-break: normal"></textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Center: Slim Diff Bar -->
-        <DiffBar ref="diffBarRef" :title="t('textDiffShort') || t('diffResult')" :items="diffBarItems"
-          :active-index="currentChangeIdx >= 0 ? changeIndices[currentChangeIdx] : -1" @item-click="onItemScroll" />
-
-        <!-- Target Panel -->
-        <div
-          class="flex flex-col h-full rounded-r-lg border-y border-r border-[var(--color-border)] overflow-hidden shadow-sm focus-within:ring-2 transition-all bg-[var(--color-background)]">
-          <div
-            class="bg-[var(--color-background)] px-3 py-2 border-b border-[var(--color-border)] flex justify-between items-center h-10">
-            <div class="flex items-center gap-2">
-              <ZBadge variant="surface" size="lg">
-                <template #default>
-                  <div class="flex items-center gap-1.5">
-                    <ZIcon name="text" :size="12" class="opacity-70" />
-                    {{ t("target") }}
-                  </div>
-                </template>
-              </ZBadge>
-            </div>
-            <ZBadge variant="primary" dot pulse size="lg">
-              {{ targetLangLabel }}
-            </ZBadge>
-          </div>
-          <div class="relative flex-1 group w-full h-full overflow-hidden">
-            <!-- Line Numbers -->
-            <div ref="rightLineNumberRef"
-              class="absolute left-0 top-0 bottom-0 w-10 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex-shrink-0 flex flex-col font-mono text-[10px] text-[var(--color-secondary)] opacity-40 select-none text-right px-2 py-2 overflow-hidden">
-              <div v-for="line in rightLines" :key="'ln-r-' + line.lineNum" class="h-6 leading-6">
-                {{ line.lineNum }}
-              </div>
-            </div>
-            <!-- Diff Highlights + Textarea -->
-            <div class="absolute left-10 right-0 top-0 bottom-0">
-              <!-- Highlight layer -->
-              <pre v-if="isTargetHighlighted" ref="targetHighlightRef"
-                class="highlight-layer absolute inset-0 m-0 p-2 font-mono text-sm leading-6 whitespace-pre-wrap break-all pointer-events-none overflow-auto scrollbar-hide"
-                v-html="diffHighlightedTarget"></pre>
-              <!-- Textarea -->
-              <textarea ref="rightTextareaRef" v-model="targetText" @scroll="onTextScroll($event, 'target')"
-                @keydown="onTextKeydown($event, 'target')"
-                class="diff-textarea absolute inset-0 m-0 w-full h-full p-2 font-mono text-sm leading-6 resize-none outline-none whitespace-pre-wrap border-none overflow-auto scrollbar-hide"
-                wrap="soft" spellcheck="false" :placeholder="t('pasteTarget')" style="word-break: normal"></textarea>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- UNIFIED MODE -->
-      <div v-else
-        class="h-full rounded-lg border border-[var(--color-border)] overflow-hidden shadow-sm bg-[var(--color-background)] flex flex-col">
-        <div
-          class="bg-[var(--color-background)] px-4 py-2 border-b border-[var(--color-border)] h-10 flex items-center">
-          <ZBadge variant="surface" size="lg">{{ t("viewUnified") }}</ZBadge>
-        </div>
-        <div class="scrollbar-hide flex-1 overflow-auto bg-[var(--color-background)] custom-scrollbar">
-          <div class="min-w-fit w-full font-mono text-sm leading-6 flex flex-col">
-            <div v-for="(line, i) in unifiedDiffLines" :key="'u-' + i"
-              class="flex group hover:bg-[var(--color-surface)] transition-colors">
-              <div
-                class="w-10 flex-shrink-0 text-right pr-2 text-[10px] text-[var(--color-secondary)] opacity-40 select-none bg-[var(--color-surface)] border-r border-[var(--color-border)]">
-                {{ line.leftNo || "" }}
-              </div>
-              <div
-                class="w-10 flex-shrink-0 text-right pr-2 text-[10px] text-[var(--color-secondary)] opacity-40 select-none bg-[var(--color-surface)] border-r border-[var(--color-border)]">
-                {{ line.rightNo || "" }}
-              </div>
-              <div
-                class="w-8 flex-shrink-0 text-center text-[var(--color-secondary)] opacity-50 select-none border-r border-[var(--color-border)] bg-[var(--color-surface)]">
-                {{
-                  line.type === "insert"
-                    ? "+"
-                    : line.type === "delete"
-                      ? "-"
-                      : " "
-                }}
-              </div>
-              <div :class="[
-                'flex-1 px-4 whitespace-pre',
-                line.type === 'insert'
-                  ? 'bg-[var(--color-insert-bg)] text-[var(--color-insert-text)]'
-                  : '',
-                line.type === 'delete'
-                  ? 'bg-[var(--color-delete-bg)] text-[var(--color-delete-text)]'
-                  : '',
-              ]">
-                {{ line.value }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- Monaco Editor Container: Monaco 编辑器容器 -->
+    <div class="flex-1 min-h-[400px] overflow-hidden">
+      <div ref="containerRef" class="w-full h-full"></div>
     </div>
   </div>
 </template>
 
-<style scoped lang="scss">
-.diff-textarea {
-  color: transparent !important;
-  background: transparent !important;
-  -webkit-text-fill-color: transparent;
-  caret-color: var(--color-text);
-}
-
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.highlight-layer {
-  :deep(.hljs) {
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    color: var(--color-text);
-  }
-
-  :deep(.hljs-keyword),
-  :deep(.hljs-selector-tag),
-  :deep(.hljs-title),
-  :deep(.hljs-section),
-  :deep(.hljs-doctag),
-  :deep(.hljs-name),
-  :deep(.hljs-strong),
-  :deep(.hljs-built_in),
-  :deep(.hljs-operator) {
-    color: #c678dd;
-  }
-
-  :deep(.hljs-string),
-  :deep(.hljs-title.class_),
-  :deep(.hljs-title.class_.inherited__),
-  :deep(.hljs-title.function_),
-  :deep(.hljs-addition) {
-    color: #98c379;
-  }
-
-  :deep(.hljs-comment),
-  :deep(.hljs-quote) {
-    color: #5c6370;
-    font-style: italic;
-  }
-
-  :deep(.hljs-number),
-  :deep(.hljs-literal),
-  :deep(.hljs-variable),
-  :deep(.hljs-template-variable),
-  :deep(.hljs-tag .hljs-attr),
-  :deep(.hljs-attr) {
-    color: #d19a66;
-  }
-
-  :deep(.hljs-type),
-  :deep(.hljs-class .hljs-title) {
-    color: #61afef;
-  }
-
-  :deep(.hljs-deletion) {
-    color: #e06c75;
-    background-color: rgba(224, 108, 117, 0.15);
-  }
-
-  :deep(.hljs-function),
-  :deep(.hljs-title.function_) {
-    color: #61afef;
-  }
-
-  :deep(.hljs-params) {
-    color: #e06c75;
-  }
-
-  :deep(.hljs-meta) {
-    color: #e5c07b;
-  }
-
-  :deep(.hljs-attribute) {
-    color: #98c379;
-  }
-
-  :deep(.hljs-symbol),
-  :deep(.hljs-bullet) {
-    color: #e5c07b;
-  }
-
-  :deep(.hljs-link) {
-    color: #61afef;
-    text-decoration: underline;
-  }
-}
-
-:deep(.diff-line-delete) {
-  background-color: rgba(224, 108, 117, 0.2);
-  display: inline-block;
-  width: 100%;
-}
-
-:deep(.diff-line-insert) {
-  background-color: rgba(152, 195, 121, 0.2);
-  display: inline-block;
-  width: 100%;
-}
-
-:deep(.diff-line-modify) {
-  background-color: rgba(234, 179, 8, 0.2);
-  display: inline-block;
-  width: 100%;
-}
-</style>
+<style scoped lang="scss"></style>

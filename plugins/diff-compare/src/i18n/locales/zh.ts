@@ -31,7 +31,10 @@ const zh = {
   textSplit: '并排对比',
   textUnified: '合并对比',
   textDiffShort: '差异',
-  autoFormat: '粘贴自动格式化',
+  autoFormat: '自动格式化',
+  autoFormatOff: '关闭',
+  autoFormatDelayed: '3秒后格式化',
+  autoFormatImmediate: '立即格式化',
   pasteSource: '在此粘贴源内容...',
   pasteTarget: '在此粘贴目标内容...',
 

@@ -1,17 +1,28 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+/**
+ * 徽章组件属性
+ */
 const props = defineProps<{
-    variant?: 'primary' | 'secondary' | 'glass' | 'outline' | 'success' | 'danger' | 'warning' | 'surface'
-    size?: 'xs' | 'sm' | 'md' | 'lg'
-    dot?: boolean
-    pulse?: boolean
+  /** 徽章样式变体 */
+  variant?: 'primary' | 'secondary' | 'glass' | 'outline' | 'success' | 'danger' | 'warning' | 'surface'
+  /** 徽章尺寸 */
+  size?: 'xs' | 'sm' | 'md' | 'lg'
+  /** 是否显示圆点指示器 */
+  dot?: boolean
+  /** 是否启用脉冲动画 */
+  pulse?: boolean
 }>()
 
+/**
+ * 计算徽章的CSS类名
+ * @returns 包含基础类名和变体类名的数组
+ */
 const classes = computed(() => [
-    'z-badge',
-    `z-badge--${props.variant || 'secondary'}`,
-    `z-badge--${props.size || 'md'}`,
+  'z-badge',
+  `z-badge--${props.variant || 'secondary'}`,
+  `z-badge--${props.size || 'md'}`,
 ])
 </script>
 

@@ -2,27 +2,48 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import ZIcon from '@/components/ui/ZIcon.vue'
 
+/**
+ * 下拉选择器组件属性
+ */
 const props = defineProps<{
-    modelValue: string
-    options: { label: string, value: string }[]
+  /** 双向绑定选中值 */
+  modelValue: string
+  /** 下拉选项列表 */
+  options: { label: string, value: string }[]
 }>()
 
+/**
+ * 发射事件
+ */
 const emit = defineEmits(['update:modelValue'])
 
+/** 下拉菜单展开状态 */
 const open = ref(false)
+/** 选择器根元素引用 */
 const selectRef = ref<HTMLElement | null>(null)
 
+/**
+ * 切换下拉菜单展开/收起状态
+ */
 const toggle = () => { open.value = !open.value }
 
+/**
+ * 选择选项并发射更新事件
+ * @param val - 选中的值
+ */
 const pick = (val: string) => {
-    emit('update:modelValue', val)
-    open.value = false
+  emit('update:modelValue', val)
+  open.value = false
 }
 
+/**
+ * 点击外部关闭下拉菜单
+ * @param e - 鼠标事件对象
+ */
 const onClickOutside = (e: MouseEvent) => {
-    if (selectRef.value && !selectRef.value.contains(e.target as Node)) {
-        open.value = false
-    }
+  if (selectRef.value && !selectRef.value.contains(e.target as Node)) {
+    open.value = false
+  }
 }
 
 onMounted(() => document.addEventListener('mousedown', onClickOutside))

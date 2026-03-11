@@ -31,7 +31,10 @@ const en = {
   textSplit: "Split View",
   textUnified: "Unified View",
   textDiffShort: 'Diff',
-  autoFormat: 'Auto-Format on Paste',
+  autoFormat: 'Auto Format',
+  autoFormatOff: 'Off',
+  autoFormatDelayed: 'Format after 3s',
+  autoFormatImmediate: 'Format immediately',
   pasteSource: 'Paste source text here...',
   pasteTarget: 'Paste target text here...',
 

@@ -31,7 +31,7 @@ watchEffect(() => {
     activeMode.value = props.initialMode || 'text'
 })
 
-const { isDark, themeMode, cycleTheme } = useTheme()
+const { themeMode, cycleTheme } = useTheme()
 /** 是否显示设置面板 */
 const showSettings = ref(false)
 </script>

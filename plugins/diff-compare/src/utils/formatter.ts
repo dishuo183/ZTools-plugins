@@ -1,47 +1,65 @@
 import beautifier from 'js-beautify'
 import hljs from 'highlight.js'
 
-// 语言配置：value(用户选择) -> hljs(highlight.js用) / label(显示名称)
-export const LANGUAGES: { value: string; hljs: string; label: string }[] = [
-  { value: 'json', hljs: 'json', label: 'JSON' },
-  { value: 'yaml', hljs: 'yaml', label: 'YAML' },
-  { value: 'yml', hljs: 'yaml', label: 'YAML' },
-  { value: 'html', hljs: 'xml', label: 'HTML' },
-  { value: 'xml', hljs: 'xml', label: 'XML' },
-  { value: 'css', hljs: 'css', label: 'CSS' },
-  { value: 'javascript', hljs: 'javascript', label: 'JavaScript' },
-  { value: 'js', hljs: 'javascript', label: 'JavaScript' },
-  { value: 'typescript', hljs: 'typescript', label: 'TypeScript' },
-  { value: 'ts', hljs: 'typescript', label: 'TypeScript' },
-  { value: 'python', hljs: 'python', label: 'Python' },
-  { value: 'py', hljs: 'python', label: 'Python' },
-  { value: 'c', hljs: 'c', label: 'C' },
-  { value: 'cpp', hljs: 'cpp', label: 'C++' },
-  { value: 'c++', hljs: 'cpp', label: 'C++' },
-  { value: 'java', hljs: 'java', label: 'Java' },
-  { value: 'rust', hljs: 'rust', label: 'Rust' },
-  { value: 'rs', hljs: 'rust', label: 'Rust' },
-  { value: 'go', hljs: 'go', label: 'Go' },
-  { value: 'golang', hljs: 'go', label: 'Go' },
-  { value: 'sql', hljs: 'sql', label: 'SQL' },
-  { value: 'markdown', hljs: 'markdown', label: 'Markdown' },
-  { value: 'md', hljs: 'markdown', label: 'Markdown' },
-  { value: 'shell', hljs: 'bash', label: 'Shell' },
-  { value: 'sh', hljs: 'bash', label: 'Shell' },
-  { value: 'bash', hljs: 'bash', label: 'Shell' },
-  { value: 'ruby', hljs: 'ruby', label: 'Ruby' },
-  { value: 'rb', hljs: 'ruby', label: 'Ruby' },
-  { value: 'php', hljs: 'php', label: 'PHP' },
-  { value: 'swift', hljs: 'swift', label: 'Swift' },
-  { value: 'kotlin', hljs: 'kotlin', label: 'Kotlin' },
-  { value: 'cs', hljs: 'csharp', label: 'C#' },
-  { value: 'csharp', hljs: 'csharp', label: 'C#' },
+// 语言配置：value(用户选择) -> hljs(highlight.js用) / monaco(Monaco Editor用) / label(显示名称)
+export const LANGUAGES: { value: string; hljs: string; monaco: string; label: string }[] = [
+  { value: 'json', hljs: 'json', monaco: 'json', label: 'JSON' },
+  { value: 'yaml', hljs: 'yaml', monaco: 'yaml', label: 'YAML' },
+  { value: 'yml', hljs: 'yaml', monaco: 'yaml', label: 'YAML' },
+  { value: 'html', hljs: 'xml', monaco: 'html', label: 'HTML' },
+  { value: 'xml', hljs: 'xml', monaco: 'xml', label: 'XML' },
+  { value: 'css', hljs: 'css', monaco: 'css', label: 'CSS' },
+  { value: 'javascript', hljs: 'javascript', monaco: 'javascript', label: 'JavaScript' },
+  { value: 'js', hljs: 'javascript', monaco: 'javascript', label: 'JavaScript' },
+  { value: 'typescript', hljs: 'typescript', monaco: 'typescript', label: 'TypeScript' },
+  { value: 'ts', hljs: 'typescript', monaco: 'typescript', label: 'TypeScript' },
+  { value: 'python', hljs: 'python', monaco: 'python', label: 'Python' },
+  { value: 'py', hljs: 'python', monaco: 'python', label: 'Python' },
+  { value: 'c', hljs: 'c', monaco: 'c', label: 'C' },
+  { value: 'cpp', hljs: 'cpp', monaco: 'cpp', label: 'C++' },
+  { value: 'c++', hljs: 'cpp', monaco: 'cpp', label: 'C++' },
+  { value: 'java', hljs: 'java', monaco: 'java', label: 'Java' },
+  { value: 'rust', hljs: 'rust', monaco: 'rust', label: 'Rust' },
+  { value: 'rs', hljs: 'rust', monaco: 'rust', label: 'Rust' },
+  { value: 'go', hljs: 'go', monaco: 'go', label: 'Go' },
+  { value: 'golang', hljs: 'go', monaco: 'go', label: 'Go' },
+  { value: 'sql', hljs: 'sql', monaco: 'sql', label: 'SQL' },
+  { value: 'markdown', hljs: 'markdown', monaco: 'markdown', label: 'Markdown' },
+  { value: 'md', hljs: 'markdown', monaco: 'markdown', label: 'Markdown' },
+  { value: 'shell', hljs: 'bash', monaco: 'shell', label: 'Shell' },
+  { value: 'sh', hljs: 'bash', monaco: 'shell', label: 'Shell' },
+  { value: 'bash', hljs: 'bash', monaco: 'shell', label: 'Shell' },
+  { value: 'ruby', hljs: 'ruby', monaco: 'ruby', label: 'Ruby' },
+  { value: 'rb', hljs: 'ruby', monaco: 'ruby', label: 'Ruby' },
+  { value: 'php', hljs: 'php', monaco: 'php', label: 'PHP' },
+  { value: 'swift', hljs: 'swift', monaco: 'swift', label: 'Swift' },
+  { value: 'kotlin', hljs: 'kotlin', monaco: 'kotlin', label: 'Kotlin' },
+  { value: 'cs', hljs: 'csharp', monaco: 'csharp', label: 'C#' },
+  { value: 'csharp', hljs: 'csharp', monaco: 'csharp', label: 'C#' },
+  { value: 'vue', hljs: 'xml', monaco: 'html', label: 'Vue' },
+  { value: 'react', hljs: 'javascript', monaco: 'javascript', label: 'React (JSX)' },
+  { value: 'jsx', hljs: 'javascript', monaco: 'javascript', label: 'React (JSX)' },
+  { value: 'tsx', hljs: 'typescript', monaco: 'typescript', label: 'React (TSX)' },
 ]
 
 // hljs语言名 -> 用户选择value的映射（从LANGUAGES自动生成）
 export const HLJS_TO_VALUE: Record<string, string> = Object.fromEntries(
   LANGUAGES.map(l => [l.hljs, l.value])
 )
+
+// 语言标识符 -> Monaco Editor 语言标识符的映射（从LANGUAGES自动生成）
+export const VALUE_TO_MONACO: Record<string, string> = Object.fromEntries(
+  LANGUAGES.map(l => [l.value, l.monaco])
+)
+
+/**
+ * 将语言标识符转换为 Monaco Editor 使用的语言标识符
+ * @param lang - 语言标识符
+ * @returns Monaco Editor 语言标识符
+ */
+export function toMonacoLanguage(lang: string): string {
+  return VALUE_TO_MONACO[lang.toLowerCase()] || lang.toLowerCase();
+}
 
 /**
  * Enhanced code formatter supporting multiple programming languages.

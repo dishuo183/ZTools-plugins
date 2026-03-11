@@ -12,6 +12,7 @@
     "highlight.js": "^11.11.1",
     "js-beautify": "^1.15.4",
     "mammoth": "^1.8.0",
+    "monaco-editor": "^0.55.1",
     "pdfjs-dist": "^5.5.207",
     "pinia": "^3.0.4",
     "pixelmatch": "^7.1.0",
