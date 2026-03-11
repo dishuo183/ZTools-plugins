@@ -8,14 +8,13 @@
 import { ref, computed, watch, watchEffect, onMounted, onUnmounted, shallowRef } from "vue";
 import { useI18n } from "vue-i18n";
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import ZSelect from "@/components/ui/ZSelect.vue";
 import ZTooltip from "@/components/ui/ZTooltip.vue";
 import ZButton from "@/components/ui/ZButton.vue";
 import ZBadge from "@/components/ui/ZBadge.vue";
 import ZIcon from "@/components/ui/ZIcon.vue";
-import { useAutoFormat } from "@/composables/useText";
-import { langOptions } from "@/composables/useText";
+import { useAutoFormat, langOptions } from "@/composables/useText";
 import { useTheme } from "@/composables/useTheme";
 import { toMonacoLanguage, detectLanguage } from "@/utils/formatter";
 import { debounce } from "@/utils/common";
@@ -25,7 +24,7 @@ import { debounce } from "@/utils/common";
  * 只使用基础 editor worker，禁用语言服务以提升性能
  */
 self.MonacoEnvironment = {
-  getWorker() {
+  getWorker(_: any, label: string) {
     return new editorWorker();
   }
 };
@@ -81,15 +80,6 @@ const monacoTheme = computed(() => {
 })
 
 /**
- * 更新 Monaco Editor 主题
- * 当主题变化时调用此函数切换 Monaco 主题
- */
-const updateTheme = () => {
-  if (!diffEditorRef.value) return;
-  monaco.editor.setTheme(monacoTheme.value);
-};
-
-/**
  * Monaco Editor 容器 DOM 引用
  */
 const containerRef = ref<HTMLElement | null>(null)
@@ -98,7 +88,17 @@ const containerRef = ref<HTMLElement | null>(null)
  * Monaco Diff Editor 实例
  * 使用 shallowRef 避免深度响应带来的性能开销
  */
-const diffEditorRef = shallowRef<monaco.editor.IStandaloneDiffEditor | null>(null)
+let diffEditorInstance: monaco.editor.IStandaloneDiffEditor | null = null
+
+/**
+ * 左侧（原始）编辑器 Model 实例
+ */
+let originalModel: monaco.editor.ITextModel | null = null
+
+/**
+ * 右侧（修改）编辑器 Model 实例
+ */
+let modifiedModel: monaco.editor.ITextModel | null = null
 
 /**
  * 左侧（原始）编辑器实例引用
@@ -199,13 +199,13 @@ watch([sourceLang, targetLang], () => {
  */
 const initMonacoEditor = () => {
   // 防止重复初始化
-  if (!containerRef.value || diffEditorRef.value) return;
+  if (!containerRef.value || diffEditorInstance) return;
 
   // 设置初始主题
   monaco.editor.setTheme(monacoTheme.value);
 
   // 创建 Diff Editor 实例
-  diffEditorRef.value = monaco.editor.createDiffEditor(containerRef.value, {
+  diffEditorInstance = monaco.editor.createDiffEditor(containerRef.value, {
     automaticLayout: true,                                 // 自动调整布局
     theme: monacoTheme.value,                              // 主题
     fontSize: 14,                                          // 字体大小
@@ -222,7 +222,7 @@ const initMonacoEditor = () => {
     ignoreTrimWhitespace: false,                           // 不忽略空白字符差异
     originalEditable: true,                                // 左侧编辑器可编辑
     renderOverviewRuler: true,                             // 显示概览标尺
-    diffWordWrap: 'off',                                   // 禁用差异 word wrap
+    diffWordWrap: 'on',                                   // 禁用差异 word wrap
     scrollbar: {
       verticalScrollbarSize: 10,                           // 垂直滚动条宽度
       horizontalScrollbarSize: 10,                         // 水平滚动条高度
@@ -230,8 +230,8 @@ const initMonacoEditor = () => {
   });
 
   // 获取左右两侧的编辑器实例
-  originalEditorRef.value = diffEditorRef.value.getOriginalEditor();
-  modifiedEditorRef.value = diffEditorRef.value.getModifiedEditor();
+  originalEditorRef.value = diffEditorInstance.getOriginalEditor();
+  modifiedEditorRef.value = diffEditorInstance.getModifiedEditor();
 
   // 监听左侧编辑器内容变化，同步到源文本
   originalEditorRef.value.onDidChangeModelContent(() => {
@@ -243,30 +243,26 @@ const initMonacoEditor = () => {
     targetText.value = modifiedEditorRef.value?.getValue() || '';
   });
 
-  // 初始化编辑器内容
-  updateEditorContent();
+  // 创建初始 Model 并设置到 Diff Editor
+  const sourceMonacoLang = toMonacoLanguage(sourceLang.value);
+  const targetMonacoLang = toMonacoLanguage(targetLang.value);
+  originalModel = monaco.editor.createModel(sourceText.value, sourceMonacoLang);
+  modifiedModel = monaco.editor.createModel(targetText.value, targetMonacoLang);
+  diffEditorInstance.setModel({
+    original: originalModel,
+    modified: modifiedModel
+  });
 }
 
 /**
  * 更新编辑器内容
- * 当文本或语言变化时重建 Editor Model
+ * 复用现有 Model，只更新文本内容
  */
 const updateEditorContent = () => {
-  if (!diffEditorRef.value) return;
+  if (!originalModel || !modifiedModel) return;
 
-  // 转换语言标识符为 Monaco 格式
-  const sourceMonacoLang = toMonacoLanguage(sourceLang.value);
-  const targetMonacoLang = toMonacoLanguage(targetLang.value);
-
-  // 为左右两侧创建新的 Model
-  const originalModel = monaco.editor.createModel(sourceText.value, sourceMonacoLang);
-  const modifiedModel = monaco.editor.createModel(targetText.value, targetMonacoLang);
-
-  // 设置到 Diff Editor
-  diffEditorRef.value.setModel({
-    original: originalModel,
-    modified: modifiedModel
-  });
+  originalModel.setValue(sourceText.value);
+  modifiedModel.setValue(targetText.value);
 }
 
 /**
@@ -274,23 +270,13 @@ const updateEditorContent = () => {
  * 切换 Monaco Editor 的语法高亮语言
  */
 const updateLanguage = () => {
-  if (!diffEditorRef.value) return;
+  if (!originalModel || !modifiedModel) return;
 
-  // 转换语言标识符
   const sourceMonacoLang = toMonacoLanguage(sourceLang.value);
   const targetMonacoLang = toMonacoLanguage(targetLang.value);
 
-  // 获取当前的 Model
-  const originalModel = diffEditorRef.value.getModel()?.original;
-  const modifiedModel = diffEditorRef.value.getModel()?.modified;
-
-  // 为左右两侧设置语言
-  if (originalModel) {
-    monaco.editor.setModelLanguage(originalModel, sourceMonacoLang);
-  }
-  if (modifiedModel) {
-    monaco.editor.setModelLanguage(modifiedModel, targetMonacoLang);
-  }
+  monaco.editor.setModelLanguage(originalModel, sourceMonacoLang);
+  monaco.editor.setModelLanguage(modifiedModel, targetMonacoLang);
 }
 
 /**
@@ -298,8 +284,8 @@ const updateLanguage = () => {
  * 切换分屏视图和内联视图
  */
 const updateViewMode = () => {
-  if (!diffEditorRef.value) return;
-  diffEditorRef.value.updateOptions({
+  if (!diffEditorInstance) return;
+  diffEditorInstance.updateOptions({
     renderSideBySide: textViewMode.value === 'split'
   });
 }
@@ -342,7 +328,7 @@ watch(textViewMode, () => {
  */
 watchEffect(() => {
   const theme = monacoTheme.value
-  if (diffEditorRef.value) {
+  if (diffEditorInstance) {
     monaco.editor.setTheme(theme)
   }
 })
@@ -352,7 +338,7 @@ watchEffect(() => {
  * 当文本从外部更新时（如格式化后），同步到 Monaco Editor
  */
 watch([sourceText, targetText], () => {
-  if (!diffEditorRef.value) return;
+  if (!diffEditorInstance) return;
 
   // 获取编辑器当前内容
   const currentOriginal = originalEditorRef.value?.getValue() || '';
@@ -379,7 +365,21 @@ onMounted(() => {
  * 释放资源，防止内存泄漏
  */
 onUnmounted(() => {
-  diffEditorRef.value?.dispose();
+  if (diffEditorInstance) {
+    diffEditorInstance.setModel(null);
+  }
+  if (originalModel) {
+    originalModel.dispose();
+    originalModel = null;
+  }
+  if (modifiedModel) {
+    modifiedModel.dispose();
+    modifiedModel = null;
+  }
+  if (diffEditorInstance) {
+    diffEditorInstance.dispose();
+    diffEditorInstance = null;
+  }
 })
 </script>
 
@@ -415,7 +415,7 @@ onUnmounted(() => {
         <!-- Clear Button: 清空按钮 -->
         <div class="flex items-center gap-1">
           <ZTooltip :content="t('clearItems')" position="bottom">
-            <ZButton variant="ghost" size="icon-sm" @click="onTextClear" :disabled="!sourceText || !targetText"
+            <ZButton variant="ghost" size="icon-sm" @click="onTextClear" :disabled="!sourceText && !targetText"
               class="!w-8 !h-8 !p-0">
               <ZIcon name="trash" :size="16" />
             </ZButton>
