@@ -5,105 +5,229 @@
   <title>AutoMode</title>
   <style>
     :root {
-      --bg: #ffffff; --card: #f5f5f5; --text: #1a1a1a; --text2: #666; --border: #e0e0e0;
-      --accent: #4a90d9; --accent2: #667eea; --success: #27ae60; --danger: #e74c3c;
-      --shadow: 0 2px 8px rgba(0,0,0,0.08); --r: 10px;
+      --bg: #ffffff;
+      --card: #f5f5f5;
+      --text: #1a1a1a;
+      --text2: #666;
+      --border: #e0e0e0;
+      --accent: #4a90d9;
+      --success: #27ae60;
+      --danger: #e74c3c;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      --r: 10px;
     }
+
     .dark {
-      --bg: #1a1a2e; --card: #1f2b47; --text: #e0e0e0; --text2: #a0a0a0;
-      --border: #2a3a5c; --shadow: 0 2px 8px rgba(0,0,0,0.3);
+      --bg: #1a1a2e;
+      --card: #1f2b47;
+      --text: #e0e0e0;
+      --text2: #a0a0a0;
+      --border: #2a3a5c;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
-    body { font-family: "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); padding: 16px; position: relative; }
-    .wrap { max-width: 400px; margin: 0 auto; }
-    h1 { text-align: center; font-size: 20px; margin-bottom: 4px; }
-    .sub { text-align: center; font-size: 13px; color: var(--text2); margin-bottom: 16px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 14px; box-shadow: var(--shadow); }
-    .row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
-    .row + .row { border-top: 1px solid var(--border); }
-    .lbl { font-size: 13px; color: var(--text2); }
-    .val { font-size: 14px; font-weight: 500; }
-    .val.on { color: var(--success); }
-    .val.err { color: var(--danger); }
 
-    /* 模式选择 Tab */
-    .tabs { display: flex; gap: 0; margin-bottom: 14px; background: var(--card); border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); }
-    .tab { flex: 1; text-align: center; padding: 10px 0; font-size: 14px; cursor: pointer; transition: .2s; color: var(--text2); border: none; background: transparent; }
-    .tab:hover { background: var(--border); }
-    .tab.active { background: var(--accent); color: #fff; font-weight: 500; }
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      position: relative;
+    }
 
-    /* 日出日落信息面板 */
-    .sun-panel { display: none; }
-    .sun-panel.show { display: block; }
-    .schedule-panel { display: none; }
-    .schedule-panel.show { display: block; }
+    .wrap {
+      max-width: 400px;
+      margin: 0 auto;
+    }
 
-    .sun-info { display: flex; justify-content: center; gap: 24px; padding: 12px 0; }
-    .sun-item { text-align: center; }
-    .sun-icon { font-size: 28px; margin-bottom: 4px; }
-    .sun-time { font-size: 22px; font-weight: 600; color: var(--text); }
-    .sun-label { font-size: 12px; color: var(--text2); }
+    h1 {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
 
-    .loc-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
-    .loc-text { flex: 1; font-size: 13px; color: var(--text2); }
-    .loc-btn { font-size: 12px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--accent); cursor: pointer; }
-    .loc-btn:hover { opacity: 0.8; }
-    .loc-summary { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
-    .loc-stack { flex: 1; min-width: 0; }
-    .loc-name { font-size: 14px; font-weight: 600; line-height: 1.4; }
-    .loc-meta { font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.4; }
-    .loc-badge { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; border: 1px solid rgba(74, 144, 217, 0.25); background: rgba(74, 144, 217, 0.12); color: var(--accent); font-size: 11px; }
-    .search-box { margin-top: 6px; }
-    .search-input { width: 100%; height: 34px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; font-size: 13px; background: var(--bg); color: var(--text); outline: none; }
-    .search-input:focus { border-color: var(--accent); }
-    .search-panel { margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); overflow: hidden; }
-    .search-status { padding: 10px 12px; font-size: 12px; color: var(--text2); }
-    .search-status.err { color: var(--danger); }
-    .search-results { max-height: 180px; overflow: auto; }
-    .search-item { width: 100%; border: none; border-top: 1px solid var(--border); background: transparent; color: var(--text); text-align: left; padding: 10px 12px; cursor: pointer; }
-    .search-item:first-child { border-top: none; }
-    .search-item:hover { background: var(--card); }
-    .search-item-name { font-size: 13px; font-weight: 500; }
-    .search-item-meta { font-size: 12px; color: var(--text2); margin-top: 4px; }
+    .sub {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 16px;
+    }
 
-    .offset-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
-    .offset-label { flex: 1; font-size: 13px; }
-    .offset-input { width: 48px; height: 28px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-size: 13px; background: var(--bg); color: var(--text); outline: none; }
-    .offset-input:focus { border-color: var(--accent); }
-    .offset-unit { font-size: 12px; color: var(--text2); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+    }
 
-    .effective-row { background: var(--accent2); color: #fff; border-radius: 8px; padding: 10px 14px; font-size: 13px; text-align: center; margin-top: 8px; }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
 
-    /* Toggle */
-    .toggle { position: relative; width: 44px; height: 24px; cursor: pointer; display: inline-block; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; inset: 0; background: #ccc; border-radius: 24px; transition: .3s; }
-    .slider::before { content: ""; position: absolute; width: 20px; height: 20px; left: 2px; bottom: 2px; background: #fff; border-radius: 50%; transition: .3s; }
-    .toggle input:checked + .slider { background: var(--accent); }
-    .toggle input:checked + .slider::before { transform: translateX(20px); }
+    .row + .row {
+      border-top: 1px solid var(--border);
+    }
 
-    .tinput { width: 50px; height: 30px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-size: 14px; background: var(--bg); color: var(--text); outline: none; }
-    .tinput:focus { border-color: var(--accent); }
+    .lbl {
+      font-size: 13px;
+      color: var(--text2);
+    }
 
-    .btns { display: flex; gap: 10px; margin-bottom: 14px; }
-    .btn { flex: 1; height: 38px; border: 1px solid var(--border); border-radius: var(--r); font-size: 14px; cursor: pointer; background: var(--card); color: var(--text); transition: .2s; }
-    .btn:hover { opacity: 0.8; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .val {
+      font-size: 14px;
+      font-weight: 500;
+    }
 
-    .toast { position: absolute; top: 10px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 8px 18px; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 999; transition: .3s; white-space: nowrap; }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.ok { border-left: 3px solid var(--success); }
-    .toast.err { border-left: 3px solid var(--danger); }
+    .val.on {
+      color: var(--success);
+    }
 
-    .icon { font-size: 20px; margin-right: 8px; }
-    .flex { display: flex; align-items: center; }
-    .gap8 { gap: 8px; }
-    .gap4 { gap: 4px; }
-    .mt8 { margin-top: 8px; }
-    .ml-auto { margin-left: auto; }
-    .hidden { display: none !important; }
+    .tinput {
+      width: 50px;
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-align: center;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
 
-    .loading-sm { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border); border-radius: 50%; border-top-color: var(--accent); animation: spin .8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .tinput:focus {
+      border-color: var(--accent);
+    }
+
+    .btns {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .btn {
+      flex: 1;
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      font-size: 14px;
+      cursor: pointer;
+      background: var(--card);
+      color: var(--text);
+      transition: .2s;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .toast {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 8px 18px;
+      font-size: 13px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 999;
+      transition: .3s;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.ok {
+      border-left: 3px solid var(--success);
+    }
+
+    .toast.err {
+      border-left: 3px solid var(--danger);
+    }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #ccc;
+      border-radius: 24px;
+      transition: .3s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      left: 2px;
+      bottom: 2px;
+      background: #fff;
+      border-radius: 50%;
+      transition: .3s;
+    }
+
+    .toggle input:checked + .slider {
+      background: var(--accent);
+    }
+
+    .toggle input:checked + .slider::before {
+      transform: translateX(20px);
+    }
+
+    .icon {
+      font-size: 20px;
+      margin-right: 8px;
+    }
+
+    .flex {
+      display: flex;
+      align-items: center;
+    }
+
+    .gap8 {
+      gap: 8px;
+    }
+
+    .loading-sm {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      border-top-color: var(--accent);
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
 <body>
@@ -111,7 +235,6 @@
     <h1>AutoMode</h1>
     <p class="sub">Windows 主题自动切换</p>
 
-    <!-- 当前状态 -->
     <div class="card">
       <div class="row">
         <div class="flex gap8">
@@ -132,16 +255,9 @@
       </div>
     </div>
 
-    <!-- 模式选择 -->
-    <div class="tabs">
-      <button class="tab active" id="tabSchedule" onclick="switchMode('schedule')">&#128336; 定时模式</button>
-      <button class="tab" id="tabSun" onclick="switchMode('sun')">&#9728;&#65039; 日出日落</button>
-    </div>
-
-    <!-- 定时模式面板 -->
-    <div class="schedule-panel show card" id="schedulePanel">
+    <div class="card">
       <div class="flex" style="justify-content:space-between;margin-bottom:12px;">
-        <strong style="font-size:15px;">定时切换</strong>
+        <strong style="font-size:15px;">定时模式</strong>
         <label class="toggle"><input type="checkbox" id="enableToggle"><span class="slider"></span></label>
       </div>
       <div class="row">
@@ -162,78 +278,11 @@
       </div>
     </div>
 
-    <!-- 日出日落模式面板 -->
-    <div class="sun-panel card" id="sunPanel">
-      <div class="flex" style="justify-content:space-between;margin-bottom:8px;">
-        <strong style="font-size:15px;">跟随日出日落</strong>
-        <label class="toggle"><input type="checkbox" id="sunToggle"><span class="slider"></span></label>
-      </div>
-
-      <!-- 位置信息 -->
-      <div class="loc-summary">
-        <span style="font-size:16px;line-height:22px;">&#128205;</span>
-        <div class="loc-stack">
-          <div class="flex gap8">
-            <span class="loc-name" id="locName">尚未选择位置</span>
-            <span class="loc-badge hidden" id="locSource"></span>
-          </div>
-          <div class="loc-meta" id="locText">使用当前位置或搜索城市后显示</div>
-        </div>
-        <button class="loc-btn" id="locBtn" onclick="detectLocation()">使用当前位置</button>
-      </div>
-
-      <div class="search-box">
-        <input type="text" class="search-input" id="citySearch" placeholder="搜索城市，例如 Tokyo / 上海 / London">
-      </div>
-      <div class="search-panel hidden" id="searchPanel">
-        <div class="search-status hidden" id="searchStatus"></div>
-        <div class="search-results" id="searchResults"></div>
-      </div>
-
-      <!-- 日出日落时间 -->
-      <div class="sun-info" id="sunInfo">
-        <div class="sun-item">
-          <div class="sun-icon">&#127749;</div>
-          <div class="sun-time" id="sunriseTime">--:--</div>
-          <div class="sun-label">日出（城市当地时间）</div>
-        </div>
-        <div style="font-size:24px;color:var(--text2);align-self:center;">&#8596;</div>
-        <div class="sun-item">
-          <div class="sun-icon">&#127751;</div>
-          <div class="sun-time" id="sunsetTime">--:--</div>
-          <div class="sun-label">日落（城市当地时间）</div>
-        </div>
-      </div>
-
-      <!-- 偏移设置 -->
-      <div class="row" style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
-        <div class="offset-label">&#127769; 日落后切换深色</div>
-        <div class="flex gap4">
-          <input type="number" class="offset-input" id="offsetDark" value="0" min="-120" max="120">
-          <span class="offset-unit">分钟后</span>
-        </div>
-      </div>
-      <div class="row">
-        <div class="offset-label">&#9728;&#65039; 日出前切换浅色</div>
-        <div class="flex gap4">
-          <input type="number" class="offset-input" id="offsetLight" value="0" min="-120" max="120">
-          <span class="offset-unit">分钟后</span>
-        </div>
-      </div>
-
-      <!-- 实际生效时间 -->
-      <div class="effective-row hidden" id="effectiveRow">
-        本机实际切换时间：浅色 <span id="effLight">--:--</span> | 深色 <span id="effDark">--:--</span>
-      </div>
-    </div>
-
-    <!-- 手动切换 -->
     <div class="btns">
       <button class="btn" id="btnDark" onclick="manualSwitch('dark')">&#127769; 深色模式</button>
       <button class="btn" id="btnLight" onclick="manualSwitch('light')">&#9728;&#65039; 浅色模式</button>
     </div>
 
-    <!-- 任务状态 -->
     <div class="card">
       <strong style="font-size:14px;display:block;margin-bottom:8px;">计划任务状态</strong>
       <div class="row">
@@ -244,10 +293,6 @@
         <span class="lbl">浅色任务</span>
         <span class="val" id="lightStat">查询中...</span>
       </div>
-      <div class="row" id="updaterRow">
-        <span class="lbl">每日更新</span>
-        <span class="val" id="updaterStat">查询中...</span>
-      </div>
     </div>
   </div>
   <div class="toast" id="toast"></div>
@@ -255,100 +300,33 @@
   <script src="lib/ui-state.js"></script>
   <script>
     var tog = document.getElementById('enableToggle');
-    var sunTog = document.getElementById('sunToggle');
     var darkH = document.getElementById('darkH');
     var darkM = document.getElementById('darkM');
     var lightH = document.getElementById('lightH');
     var lightM = document.getElementById('lightM');
-    var offsetDark = document.getElementById('offsetDark');
-    var offsetLight = document.getElementById('offsetLight');
     var themeIcon = document.getElementById('themeIcon');
     var themeValue = document.getElementById('themeValue');
     var schedStat = document.getElementById('schedStat');
     var darkStat = document.getElementById('darkStat');
     var lightStat = document.getElementById('lightStat');
-    var updaterStat = document.getElementById('updaterStat');
-    var updaterRow = document.getElementById('updaterRow');
     var toastEl = document.getElementById('toast');
-    var locName = document.getElementById('locName');
-    var locText = document.getElementById('locText');
-    var locSource = document.getElementById('locSource');
-    var locBtn = document.getElementById('locBtn');
-    var citySearch = document.getElementById('citySearch');
-    var searchPanel = document.getElementById('searchPanel');
-    var searchStatus = document.getElementById('searchStatus');
-    var searchResults = document.getElementById('searchResults');
-    var sunriseTime = document.getElementById('sunriseTime');
-    var sunsetTime = document.getElementById('sunsetTime');
-    var effectiveRow = document.getElementById('effectiveRow');
-    var effLight = document.getElementById('effLight');
-    var effDark = document.getElementById('effDark');
     var uiState = window.autoModeUiState || {
       shouldDisableScheduleInputs: function(state) {
-        return !!state && state.currentMode === 'schedule' && !!state.scheduleEnabled;
+        return !!state && !!state.scheduleEnabled;
       },
       hasThemeStateChanged: function(state) {
         if (!state) return false;
         return state.previousIsDark !== !!state.detectedIsDark;
-      },
-      canEnableSunMode: function(state) {
-        return !!state && !!state.selectedLocation && !!state.sunTimesReady && !state.sunFetchError;
-      },
-      shouldShowSearchEmpty: function(state) {
-        return !!state &&
-          (state.query || '').trim().length >= 2 &&
-          !state.loading &&
-          !state.error &&
-          Array.isArray(state.results) &&
-          state.results.length === 0;
-      },
-      shouldShowSearchError: function(state) {
-        return !!state &&
-          (state.query || '').trim().length >= 2 &&
-          !state.loading &&
-          !!state.error;
-      },
-      getSearchResultDisplays: function(results) {
-        return Array.isArray(results) ? results.map(function(item) {
-          return {
-            item: item,
-            title: item.name || '未命名地点',
-            meta: [
-              [item.region, item.country].filter(Boolean).join(', '),
-              item.timezone
-            ].filter(Boolean).join(' · ')
-          };
-        }) : [];
       }
     };
     var themeMedia = null;
     var themeMediaListener = null;
     var themePollTimer = null;
     var lastThemeIsDark = null;
-    var searchTimer = null;
-    var sunRefreshTimer = null;
-
-    try { ztools.setExpendHeight(600); } catch(e) {}
-
-    var currentMode = 'schedule'; // 'schedule' | 'sun'
-    var selectedLocation = null;
-    var searchState = {
-      query: '',
-      loading: false,
-      error: false,
-      results: []
-    };
-    var sunState = {
-      loading: false,
-      ready: false,
-      error: false,
-      data: null,
-      message: ''
-    };
-
-    // ========== Toast ==========
-
     var toastTimer = null;
+
+    try { ztools.setExpendHeight(460); } catch(e) {}
+
     function toast(msg, type) {
       toastEl.textContent = msg;
       toastEl.className = 'toast ' + (type || '');
@@ -358,31 +336,21 @@
     }
 
     var notifyTog = document.getElementById('notifyToggle');
-    try { var savedNotify = ztools.dbStorage.getItem('automode-notify'); if (savedNotify === 'false') notifyTog.checked = false; } catch(e) {}
-    notifyTog.addEventListener('change', function() { try { ztools.dbStorage.setItem('automode-notify', notifyTog.checked ? 'true' : 'false'); } catch(e) {} });
+    try {
+      var savedNotify = ztools.dbStorage.getItem('automode-notify');
+      if (savedNotify === 'false') notifyTog.checked = false;
+    } catch(e) {}
+
+    notifyTog.addEventListener('change', function() {
+      try {
+        ztools.dbStorage.setItem('automode-notify', notifyTog.checked ? 'true' : 'false');
+      } catch(e) {}
+    });
 
     function notify(msg) {
       if (!notifyTog.checked) return;
       try { ztools.showNotification(msg); } catch(e) {}
     }
-
-    // ========== 模式切换 ==========
-
-    function switchMode(mode) {
-      currentMode = mode;
-      document.getElementById('tabSchedule').className = 'tab' + (mode === 'schedule' ? ' active' : '');
-      document.getElementById('tabSun').className = 'tab' + (mode === 'sun' ? ' active' : '');
-      document.getElementById('schedulePanel').className = 'schedule-panel' + (mode === 'schedule' ? ' show card' : '');
-      document.getElementById('sunPanel').className = 'sun-panel' + (mode === 'sun' ? ' show card' : '');
-      updateScheduleInputState();
-      renderSunToggleState();
-
-      if (mode === 'sun' && !selectedLocation) {
-        detectLocation();
-      }
-    }
-
-    // ========== 主题检测 ==========
 
     function applyTheme(isDark) {
       if (isDark) {
@@ -450,299 +418,12 @@
 
     function updateScheduleInputState() {
       var disabled = uiState.shouldDisableScheduleInputs({
-        currentMode: currentMode,
         scheduleEnabled: !!tog.checked
       });
       [darkH, darkM, lightH, lightM].forEach(function(input) {
         input.disabled = disabled;
       });
     }
-
-    function getOffsetValue(input) {
-      var value = parseInt(input.value, 10);
-      return isNaN(value) ? 0 : value;
-    }
-
-    function renderSelectedLocation() {
-      if (!selectedLocation) {
-        locName.textContent = '尚未选择位置';
-        locText.textContent = '使用当前位置或搜索城市后显示';
-        locSource.textContent = '';
-        locSource.classList.add('hidden');
-        return;
-      }
-
-      var fallbackName = '';
-      if (typeof selectedLocation.lat === 'number' && typeof selectedLocation.lng === 'number') {
-        fallbackName = selectedLocation.lat.toFixed(2) + ', ' + selectedLocation.lng.toFixed(2);
-      }
-      locName.textContent = selectedLocation.name || fallbackName || '已选择位置';
-      locText.textContent = [
-        selectedLocation.region,
-        selectedLocation.country,
-        selectedLocation.timezone
-      ].filter(Boolean).join(' · ') || '已选择位置';
-
-      if (selectedLocation.source === 'auto') {
-        locSource.textContent = '当前定位';
-        locSource.classList.remove('hidden');
-      } else if (selectedLocation.source === 'search') {
-        locSource.textContent = '手动选择';
-        locSource.classList.remove('hidden');
-      } else {
-        locSource.textContent = '';
-        locSource.classList.add('hidden');
-      }
-    }
-
-    function renderSunToggleState() {
-      var canEnable = uiState.canEnableSunMode({
-        selectedLocation: selectedLocation,
-        sunTimesReady: sunState.ready,
-        sunFetchError: sunState.error
-      });
-      sunTog.disabled = !sunTog.checked && !canEnable;
-    }
-
-    function renderSunTimes() {
-      if (sunState.loading) {
-        sunriseTime.textContent = '加载中';
-        sunsetTime.textContent = '加载中';
-        effectiveRow.classList.add('hidden');
-        renderSunToggleState();
-        return;
-      }
-
-      if (sunState.ready && sunState.data) {
-        sunriseTime.textContent = sunState.data.sunriseCity || sunState.data.sunrise || '--:--';
-        sunsetTime.textContent = sunState.data.sunsetCity || sunState.data.sunset || '--:--';
-        effLight.textContent = sunState.data.lightTimeLocal || '--:--';
-        effDark.textContent = sunState.data.darkTimeLocal || '--:--';
-        effectiveRow.classList.remove('hidden');
-        renderSunToggleState();
-        return;
-      }
-
-      if (sunState.error) {
-        sunriseTime.textContent = '获取失败';
-        sunsetTime.textContent = '获取失败';
-        effectiveRow.classList.add('hidden');
-        renderSunToggleState();
-        return;
-      }
-
-      sunriseTime.textContent = '--:--';
-      sunsetTime.textContent = '--:--';
-      effectiveRow.classList.add('hidden');
-      renderSunToggleState();
-    }
-
-    function resetSunState() {
-      sunState = {
-        loading: false,
-        ready: false,
-        error: false,
-        data: null,
-        message: ''
-      };
-      renderSunTimes();
-    }
-
-    function buildSunConfigFromSelection() {
-      if (!selectedLocation) {
-        return null;
-      }
-      return {
-        lat: selectedLocation.lat,
-        lng: selectedLocation.lng,
-        name: selectedLocation.name || '',
-        region: selectedLocation.region || '',
-        country: selectedLocation.country || '',
-        timezone: selectedLocation.timezone || '',
-        offsetDark: getOffsetValue(offsetDark),
-        offsetLight: getOffsetValue(offsetLight)
-      };
-    }
-
-    function loadSunTimesForSelection() {
-      var config = buildSunConfigFromSelection();
-      if (!config) {
-        resetSunState();
-        return;
-      }
-      if (!config.timezone) {
-        sunState = {
-          loading: false,
-          ready: false,
-          error: true,
-          data: null,
-          message: '缺少时区信息，请重新选择城市'
-        };
-        renderSunTimes();
-        return;
-      }
-
-      sunState = {
-        loading: true,
-        ready: false,
-        error: false,
-        data: null,
-        message: ''
-      };
-      renderSunTimes();
-
-      try {
-        var result = window.themeAPI.fetchSunTimes(
-          config.lat,
-          config.lng,
-          config.timezone,
-          {
-            offsetDark: config.offsetDark,
-            offsetLight: config.offsetLight,
-            windowOffsetDays: 0
-          }
-        );
-
-        if (result && result.success && result.data) {
-          sunState = {
-            loading: false,
-            ready: true,
-            error: false,
-            data: result.data,
-            message: ''
-          };
-        } else {
-          sunState = {
-            loading: false,
-            ready: false,
-            error: true,
-            data: null,
-            message: result && result.error ? result.error : '获取日出日落失败'
-          };
-        }
-      } catch(e) {
-        sunState = {
-          loading: false,
-          ready: false,
-          error: true,
-          data: null,
-          message: e.message
-        };
-      }
-
-      renderSunTimes();
-    }
-
-    function queueSunRefresh(delay) {
-      clearTimeout(sunRefreshTimer);
-      if (!selectedLocation) {
-        resetSunState();
-        return;
-      }
-      sunRefreshTimer = setTimeout(loadSunTimesForSelection, delay || 0);
-    }
-
-    function renderSearchResults() {
-      var trimmed = (searchState.query || '').trim();
-      var shouldShow = trimmed.length >= 2;
-      searchPanel.classList.toggle('hidden', !shouldShow);
-      searchStatus.className = 'search-status hidden';
-      searchStatus.textContent = '';
-      searchResults.innerHTML = '';
-
-      if (!shouldShow) {
-        return;
-      }
-
-      if (searchState.loading) {
-        searchStatus.textContent = '搜索中...';
-        searchStatus.className = 'search-status';
-        return;
-      }
-
-      if (uiState.shouldShowSearchError(searchState)) {
-        searchStatus.textContent = '搜索失败，请检查网络后重试';
-        searchStatus.className = 'search-status err';
-        return;
-      }
-
-      if (uiState.shouldShowSearchEmpty(searchState)) {
-        searchStatus.textContent = '未找到匹配城市';
-        searchStatus.className = 'search-status';
-        return;
-      }
-
-      uiState.getSearchResultDisplays(searchState.results).forEach(function(displayItem) {
-        var item = displayItem.item;
-        var button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'search-item';
-
-        var nameEl = document.createElement('div');
-        nameEl.className = 'search-item-name';
-        nameEl.textContent = displayItem.title;
-
-        var metaEl = document.createElement('div');
-        metaEl.className = 'search-item-meta';
-        metaEl.textContent = displayItem.meta;
-
-        button.appendChild(nameEl);
-        button.appendChild(metaEl);
-        button.addEventListener('click', function() {
-          selectedLocation = item;
-          renderSelectedLocation();
-          searchState = {
-            query: '',
-            loading: false,
-            error: false,
-            results: []
-          };
-          citySearch.value = '';
-          renderSearchResults();
-          queueSunRefresh(40);
-        });
-        searchResults.appendChild(button);
-      });
-    }
-
-    function queueCitySearch() {
-      clearTimeout(searchTimer);
-      searchState.query = citySearch.value;
-      searchState.loading = false;
-      searchState.error = false;
-      searchState.results = [];
-      renderSearchResults();
-
-      var trimmed = (searchState.query || '').trim();
-      if (trimmed.length < 2) {
-        return;
-      }
-
-      searchState.loading = true;
-      renderSearchResults();
-
-      searchTimer = setTimeout(function() {
-        try {
-          var result = window.themeAPI.searchCities(trimmed);
-          if (result && result.success) {
-            searchState.loading = false;
-            searchState.error = false;
-            searchState.results = Array.isArray(result.data) ? result.data : [];
-          } else {
-            searchState.loading = false;
-            searchState.error = true;
-            searchState.results = [];
-          }
-        } catch(e) {
-          searchState.loading = false;
-          searchState.error = true;
-          searchState.results = [];
-        }
-        renderSearchResults();
-      }, 300);
-    }
-
-    // ========== 任务状态 ==========
 
     function refreshTasks() {
       try {
@@ -751,194 +432,105 @@
         darkStat.className = 'val' + (s.dark.exists ? ' on' : '');
         lightStat.textContent = s.light.exists ? s.light.nextRun : '未创建';
         lightStat.className = 'val' + (s.light.exists ? ' on' : '');
-        updaterStat.textContent = s.updater.exists ? '已启用' : '未创建';
-        updaterStat.className = 'val' + (s.updater.exists ? ' on' : '');
-        updaterRow.style.display = s.isSunMode ? '' : 'none';
 
         if (s.enabled) {
-          schedStat.textContent = s.isSunMode ? '日出日落' : '已启用';
+          schedStat.textContent = '已启用';
           schedStat.className = 'val on';
         } else {
           schedStat.textContent = '未启用';
           schedStat.className = 'val';
         }
-        tog.checked = s.enabled && !s.isSunMode;
-        sunTog.checked = s.enabled && s.isSunMode;
+
+        tog.checked = !!s.enabled;
         updateScheduleInputState();
-        renderSunToggleState();
       } catch(e) {
         darkStat.textContent = '查询失败';
         lightStat.textContent = '查询失败';
         updateScheduleInputState();
-        renderSunToggleState();
       }
-    }
-
-    // ========== 日出日落 ==========
-
-    function detectLocation() {
-      if (!selectedLocation) {
-        locName.textContent = '正在定位...';
-        locText.textContent = '正在获取当前位置';
-        locSource.textContent = '';
-        locSource.classList.add('hidden');
-      }
-      locBtn.disabled = true;
-      setTimeout(function() {
-        try {
-          var loc = window.themeAPI.getUserLocation();
-          if (loc && loc.success && loc.data) {
-            selectedLocation = loc.data;
-            renderSelectedLocation();
-            citySearch.value = '';
-            searchState = {
-              query: '',
-              loading: false,
-              error: false,
-              results: []
-            };
-            renderSearchResults();
-            toast('位置已定位: ' + (selectedLocation.name || '当前位置'), 'ok');
-            queueSunRefresh(40);
-          } else {
-            if (!selectedLocation) {
-              renderSelectedLocation();
-            }
-            toast('位置检测失败', 'err');
-          }
-        } catch(e) {
-          if (!selectedLocation) {
-            renderSelectedLocation();
-          }
-          toast('位置检测失败: ' + e.message, 'err');
-        }
-        locBtn.disabled = false;
-      }, 50);
     }
 
     function restoreSavedState() {
       try {
         var saved = window.themeAPI.getSavedConfig();
         if (!saved || !saved.config) {
-          renderSelectedLocation();
-          renderSunToggleState();
+          updateScheduleInputState();
           return;
         }
 
-        if (saved.mode === 'schedule' && saved.config.darkTime && saved.config.lightTime) {
+        if (saved.config.darkTime && saved.config.lightTime) {
           var dp = saved.config.darkTime.split(':');
           var lp = saved.config.lightTime.split(':');
           darkH.value = dp[0];
           darkM.value = dp[1];
           lightH.value = lp[0];
           lightM.value = lp[1];
-          tog.checked = !!saved.enabled;
-          switchMode('schedule');
-          return;
         }
 
-        selectedLocation = {
-          name: saved.config.name || saved.config.city || '',
-          region: saved.config.region || '',
-          country: saved.config.country || '',
-          lat: saved.config.lat,
-          lng: saved.config.lng,
-          timezone: saved.config.timezone || '',
-          source: saved.config.source || ''
-        };
-        offsetDark.value = saved.config.offsetDark || 0;
-        offsetLight.value = saved.config.offsetLight || 0;
-        sunTog.checked = !!saved.enabled;
-        renderSelectedLocation();
-        switchMode('sun');
-        queueSunRefresh(40);
-      } catch(e) {
-        renderSelectedLocation();
-        renderSunToggleState();
-      }
+        tog.checked = !!saved.enabled;
+      } catch(e) {}
+
+      updateScheduleInputState();
     }
 
-    citySearch.addEventListener('input', queueCitySearch);
-    offsetDark.addEventListener('input', function() { queueSunRefresh(300); });
-    offsetLight.addEventListener('input', function() { queueSunRefresh(300); });
+    function pad2(n) {
+      return String(n).padStart(2, '0');
+    }
 
-    // ========== 定时模式 Toggle ==========
+    function getTS(h, m) {
+      return pad2(h.value) + ':' + pad2(m.value);
+    }
 
-    function pad2(n) { return String(n).padStart(2, '0'); }
-    function getTS(h, m) { return pad2(h.value) + ':' + pad2(m.value); }
     function validTime(h, m) {
-      var hv = parseInt(h.value, 10); var mv = parseInt(m.value, 10);
+      var hv = parseInt(h.value, 10);
+      var mv = parseInt(m.value, 10);
       return !isNaN(hv) && hv >= 0 && hv <= 23 && !isNaN(mv) && mv >= 0 && mv <= 59;
     }
 
     tog.addEventListener('change', function() {
       if (tog.checked) {
-        if (!validTime(darkH, darkM)) { toast('深色模式时间无效', 'err'); tog.checked = false; updateScheduleInputState(); return; }
-        if (!validTime(lightH, lightM)) { toast('浅色模式时间无效', 'err'); tog.checked = false; updateScheduleInputState(); return; }
+        if (!validTime(darkH, darkM)) {
+          toast('深色模式时间无效', 'err');
+          tog.checked = false;
+          updateScheduleInputState();
+          return;
+        }
+        if (!validTime(lightH, lightM)) {
+          toast('浅色模式时间无效', 'err');
+          tog.checked = false;
+          updateScheduleInputState();
+          return;
+        }
         try {
-          // 先禁用可能存在的旧任务（包括日出日落模式的 updater）
           window.themeAPI.disableScheduler();
-          var r = window.themeAPI.enableScheduler({ darkTime: getTS(darkH, darkM), lightTime: getTS(lightH, lightM) });
+          var r = window.themeAPI.enableScheduler({
+            darkTime: getTS(darkH, darkM),
+            lightTime: getTS(lightH, lightM)
+          });
           if (r.success) {
-            sunTog.checked = false; // 互斥：关闭日出日落开关
             toast('定时切换已启用', 'ok');
             notify('主题定时切换已启用');
-          } else { toast('启用失败: ' + r.error, 'err'); tog.checked = false; }
-        } catch(e) { toast('操作失败: ' + e.message, 'err'); tog.checked = false; }
+          } else {
+            toast('启用失败: ' + r.error, 'err');
+            tog.checked = false;
+          }
+        } catch(e) {
+          toast('操作失败: ' + e.message, 'err');
+          tog.checked = false;
+        }
       } else {
         try {
           window.themeAPI.disableScheduler();
           toast('定时切换已禁用', 'ok');
           notify('主题定时切换已禁用');
-        } catch(e) { toast('操作失败: ' + e.message, 'err'); tog.checked = true; }
+        } catch(e) {
+          toast('操作失败: ' + e.message, 'err');
+          tog.checked = true;
+        }
       }
       updateScheduleInputState();
       refreshTasks();
     });
-
-    // ========== 日出日落模式 Toggle ==========
-
-    sunTog.addEventListener('change', function() {
-      if (sunTog.checked) {
-        var canEnable = uiState.canEnableSunMode({
-          selectedLocation: selectedLocation,
-          sunTimesReady: sunState.ready,
-          sunFetchError: sunState.error
-        });
-        if (!canEnable) {
-          toast(sunState.message || '请先选择有效城市并完成日出日落获取', 'err');
-          sunTog.checked = false;
-          renderSunToggleState();
-          return;
-        }
-
-        try {
-          window.themeAPI.disableScheduler();
-          var config = buildSunConfigFromSelection();
-          var r = window.themeAPI.enableSunScheduler(config);
-          if (r.success) {
-            tog.checked = false;
-            toast('日出日落模式已启用', 'ok');
-            notify('日出日落主题切换已启用');
-          } else {
-            toast('启用失败: ' + r.error, 'err');
-            sunTog.checked = false;
-          }
-        } catch(e) {
-          toast('操作失败: ' + e.message, 'err');
-          sunTog.checked = false;
-        }
-      } else {
-        try {
-          window.themeAPI.disableScheduler();
-          toast('日出日落模式已禁用', 'ok');
-          notify('主题自动切换已禁用');
-        } catch(e) { toast('操作失败: ' + e.message, 'err'); sunTog.checked = true; }
-      }
-      refreshTasks();
-    });
-
-    // ========== 手动切换 ==========
 
     function manualSwitch(mode) {
       var btn = document.getElementById(mode === 'dark' ? 'btnDark' : 'btnLight');
@@ -954,18 +546,21 @@
           notify('正在切换到' + t + '模式');
           btn.disabled = false;
           btn.innerHTML = label;
-        } else { toast('切换失败: ' + r.error, 'err'); btn.disabled = false; btn.innerHTML = label; }
-      } catch(e) { toast('操作失败: ' + e.message, 'err'); btn.disabled = false; btn.innerHTML = label; }
+        } else {
+          toast('切换失败: ' + r.error, 'err');
+          btn.disabled = false;
+          btn.innerHTML = label;
+        }
+      } catch(e) {
+        toast('操作失败: ' + e.message, 'err');
+        btn.disabled = false;
+        btn.innerHTML = label;
+      }
     }
-
-    // ========== 初始化 ==========
 
     refreshTheme(true);
     startThemeSync();
     window.addEventListener('beforeunload', stopThemeSync);
-    renderSelectedLocation();
-    renderSunTimes();
-    renderSearchResults();
     restoreSavedState();
     refreshTasks();
   </script>
