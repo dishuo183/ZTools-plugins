@@ -113,14 +113,16 @@ const emit = defineEmits(['copy', 'paste', 'clear'])
   top: 50%;
   transform: translateY(-50%);
   padding: 4px 10px;
-  background: var(--text-primary);
-  color: var(--bg-surface);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
   font-size: 12px;
   border-radius: 4px;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s;
+  z-index: 10;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
 }
 
 .sidebar-btn:hover::after {
