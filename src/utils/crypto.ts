@@ -39,10 +39,10 @@ export async function deriveKey(password: string, salt: Uint8Array): Promise<Cry
         ['deriveKey']
     );
 
-    return (crypto.subtle as any).deriveKey(
+    return crypto.subtle.deriveKey(
         {
             name: 'PBKDF2',
-            salt: salt,
+            salt: salt.slice(),
             iterations: PBKDF2_ITERATIONS,
             hash: 'SHA-256'
         },
@@ -60,8 +60,8 @@ export async function deriveKey(password: string, salt: Uint8Array): Promise<Cry
 export async function encryptSecret(plaintext: string, key: CryptoKey): Promise<string> {
     const iv = crypto.getRandomValues(new Uint8Array(IV_SIZE));
     const encoder = new TextEncoder();
-    const encrypted = await (crypto.subtle as any).encrypt(
-        { name: 'AES-GCM', iv: iv },
+    const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv.slice() },
         key,
         encoder.encode(plaintext)
     );
@@ -79,10 +79,10 @@ export async function decryptSecret(combined: string, key: CryptoKey): Promise<s
     const iv = base64ToBuffer(parts[0]);
     const ciphertext = base64ToBuffer(parts[1]);
 
-    const decrypted = await (crypto.subtle as any).decrypt(
-        { name: 'AES-GCM', iv: iv },
+    const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv.slice() },
         key,
-        ciphertext
+        ciphertext.slice()
     );
 
     return new TextDecoder().decode(decrypted);
@@ -105,9 +105,9 @@ export async function exportKey(key: CryptoKey): Promise<string> {
 
 export async function importKeyFromRaw(rawBase64: string): Promise<CryptoKey> {
     const buf = base64ToBuffer(rawBase64);
-    return (crypto.subtle as any).importKey(
+    return crypto.subtle.importKey(
         'raw',
-        buf,
+        buf.slice(),
         'AES-GCM',
         true,
         ['encrypt', 'decrypt']
