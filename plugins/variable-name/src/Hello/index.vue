@@ -151,7 +151,8 @@ function generateFormats(str) {
 }
 
 function toCamelCase(str) {
-  return str.replace(/\s+(.)/g, (_, c) => c.toUpperCase()).replace(/\s+/g, '');
+  const s = str.replace(/\s+(.)/g, (_, c) => c.toUpperCase()).replace(/\s+/g, '');
+  return s.charAt(0).toLowerCase() + s.slice(1);
 }
 
 function toPascalCase(str) {
@@ -192,7 +193,6 @@ function toPathCase(str) {
 
 const handleClick = async () => {
   if (!inputValue.value.trim()) {
-    message.warning('请输入内容');
     return;
   }
 

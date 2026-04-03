@@ -116,14 +116,12 @@ watch(
 watch(
   () => [formData.appId, formData.appKey, formData.translateMode, formData.delayTime],
   () => {
-    if (formData.appId.trim() && formData.appKey.trim()) {
-      saveConfig({
-        appId: formData.appId.trim(),
-        appKey: formData.appKey.trim(),
-        translateMode: formData.translateMode,
-        delayTime: formData.delayTime,
-      });
-    }
+    saveConfig({
+      appId: formData.appId.trim(),
+      appKey: formData.appKey.trim(),
+      translateMode: formData.translateMode,
+      delayTime: formData.delayTime,
+    });
   }
 );
 </script>
