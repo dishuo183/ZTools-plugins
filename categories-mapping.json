@@ -20,7 +20,8 @@
       "pomodoro-timer",
       "sticky-note",
       "totodo",
-      "whiteboard"
+      "whiteboard",
+      "project-manager"
     ]
   },
   {
@@ -39,7 +40,9 @@
       "port-use",
       "redis-client",
       "tiny-rdm",
-      "vimtutor"
+      "vimtutor",
+      "jet-plugin",
+      "variable-name"
     ]
   },
   {
@@ -47,7 +50,7 @@
     "title": "系统工具",
     "description": "系统级实用工具",
     "icon": "https://raw.githubusercontent.com/ZToolsCenter/ZTools-plugins/refs/heads/main/icons/system.png",
-    "list": ["everything", "mac-system-preference-ztools-plugin"]
+    "list": ["everything", "mac-system-preference-ztools-plugin", "killprocess"]
   },
   {
     "key": "media",
