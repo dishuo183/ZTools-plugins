@@ -39,6 +39,7 @@ watch(() => props.show, (val) => {
               @keyup.enter="emits('verify')" 
               @focus="emits('focus')"
               ref="verifyInput"
+              spellcheck="false"
             >
           </div>
         </div>

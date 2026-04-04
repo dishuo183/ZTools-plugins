@@ -78,6 +78,7 @@ const togglePasswordVisibility = () => {
               @input="emits('update:passwordInput', ($event.target as HTMLInputElement).value)"
               @keydown="handleKeydown"
               placeholder="输入主密码 (导入成功后自动设定为新的主密码)"
+              spellcheck="false"
             />
             <div class="eye-btn" @click="togglePasswordVisibility">
               <svg v-if="showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -87,7 +88,7 @@ const togglePasswordVisibility = () => {
         </div>
 
         <div class="modal-actions">
-          <button class="btn" @click="handleCancel">取消</button>
+          <button class="btn btn-secondary" @click="handleCancel">取消</button>
           <button class="btn btn-primary" @click="handleSubmit">导入</button>
         </div>
       </div>
