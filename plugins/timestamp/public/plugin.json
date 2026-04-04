@@ -2,7 +2,7 @@
   "$schema": "node_modules/@ztools-center/ztools-api-types/resource/ztools.schema.json",
   "name": "timestamp",
   "title": "timestamp",
-  "description": "timestamp",
+  "description": "时间戳转换",
   "author": "loocao",
   "version": "1.0.0",
   "main": "index.html",
@@ -19,13 +19,13 @@
     {
       "code": "timestamp",
       "explain": "时间戳转换",
-      "icon": "logo.png",
       "cmds": [
         {
           "type": "regex",
           "label": "时间戳转换",
-          "match": "/^\\d{10}(\\d{3})?$/i",
-          "minLength": 10
+          "match": "/(^\\d{5,}$)|(^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?$)/i",
+          "minLength": 5,
+          "maxLength": 25
         }
       ]
     }
