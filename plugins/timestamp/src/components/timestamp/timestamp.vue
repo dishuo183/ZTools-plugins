@@ -1,31 +1,39 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 const props = defineProps({
   launchParam: {
     type: Object,
-    required: true,
-  },
+    required: true
+  }
 })
+
+// 数字补零函数
+const pad = (n: number) => String(n).padStart(2, '0')
 
 // 格式化日期为 YYYY-MM-DD HH:mm:ss
 const formatDateTime = (date: Date) => {
-  const pad = (n: number) => String(n).padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 }
 
 const inputValue = ref(props.launchParam.payload || new Date().getTime().toString())
 
+watch(() => props.launchParam.payload, (payload) => {
+  if (payload) {
+    inputValue.value = payload
+  }
+})
+
 // 其它时区面板显示状态
 const showOtherTimezones = ref(false)
 
 // 复制到剪贴板
-const copyToClipboard = async (text: string) => {
+const copyToClipboard = (text: string) => {
   if (text === '-') return
   try {
-    ztools.copyText(text)
+    window.ztools.copyText(text)
     // 复制成功后退出插件
-    ztools.outPlugin(false)
+    window.ztools.outPlugin(true)
   } catch (err) {
     console.error('复制失败:', err)
   }
@@ -62,7 +70,6 @@ const localTimeFull = computed(() => {
 // 格式化本地日期
 const localTimeDate = computed(() => {
   if (!parsedDate.value) return '-'
-  const pad = (n: number) => String(n).padStart(2, '0')
   return `${parsedDate.value.getFullYear()}-${pad(parsedDate.value.getMonth() + 1)}-${pad(parsedDate.value.getDate())}`
 })
 
@@ -101,7 +108,6 @@ const getTimezoneTime = (offsetMinutes: number) => {
   const timezoneDate = new Date(timezoneMs)
 
   // 手动格式化，避免使用本地时区
-  const pad = (n: number) => String(n).padStart(2, '0')
   return `${timezoneDate.getUTCFullYear()}-${pad(timezoneDate.getUTCMonth() + 1)}-${pad(timezoneDate.getUTCDate())} ${pad(timezoneDate.getUTCHours())}:${pad(timezoneDate.getUTCMinutes())}:${pad(timezoneDate.getUTCSeconds())}`
 }
 
@@ -114,7 +120,13 @@ const handleKeyboard = (e: KeyboardEvent) => {
   const num = parseInt(e.key)
   if (isNaN(num) || num < 1 || num > 5) return
 
-  const values = [localTimeFull.value, localTimeDate.value, timestampSeconds.value, timestampMilliseconds.value, utcTime.value]
+  const values = [
+    localTimeFull.value,
+    localTimeDate.value,
+    timestampSeconds.value,
+    timestampMilliseconds.value,
+    utcTime.value
+  ]
   copyToClipboard(values[num - 1])
 }
 
