@@ -117,14 +117,26 @@ const initialize = async () => {
   startTicker(accounts)
   window.addEventListener('click', hideContextMenu)
 
+  let killTimer: any = null
+
   if (z?.onPluginEnter) {
     z.onPluginEnter(async () => {
+      // 中途打开，取消待执行的 kill
+      if (killTimer) { clearTimeout(killTimer); killTimer = null }
+
       await loadAccounts(masterSalt, masterKey, config, {
         onAutoUnlock: tryAutoUnlock,
         onDecryptAll: () => decryptAllAccounts(masterKey.value),
         onShowVerify: () => {}, // 自动模式不弹窗
         onTokensUpdate: () => updateTokens(accounts.value)
       })
+    })
+  }
+
+  if (z?.onPluginOut) {
+    z.onPluginOut(() => {
+      // 退出后 3 分钟内未打开则结束进程释放内存
+      killTimer = setTimeout(() => { z.outPlugin(true) }, 3 * 60 * 1000)
     })
   }
 }
@@ -612,11 +624,6 @@ onUnmounted(() => { stopTicker(); window.removeEventListener('click', hideContex
           <div class="modal-title">关于插件</div>
           <div class="about-content">
             <div class="about-section">
-              <span class="about-label">插件作者</span>
-              <a href="javascript:void(0)" @click="openExternal('https://github.com/dishuo183')"
-                class="about-link">Github (dishuo183)</a>
-            </div>
-            <div class="about-section">
               <span class="about-label">插件反馈</span>
               <a href="javascript:void(0)" @click="openExternal('https://github.com/dishuo183/ZTools-plugins/issues')"
                 class="about-link">Github Issues</a>
@@ -625,6 +632,9 @@ onUnmounted(() => { stopTicker(); window.removeEventListener('click', hideContex
               <span class="about-label">工具仓库</span>
               <a href="javascript:void(0)" @click="openExternal('https://github.com/ZToolsCenter/ZTools')"
                 class="about-link">Github (ZToolsCenter/ZTools)</a>
+            </div>
+            <div class="about-disclaimer">
+              本项目<strong>全部代码均由人工智能（AI）生成</strong><br>项目作者不具备相关编程能力，无法对代码内容提供技术解释，亦不作任何功能或稳定性保证。如遇问题或有改进建议，欢迎自行修改、Fork 或提交 Issue。
             </div>
           </div>
           <div class="modal-actions">
@@ -1094,6 +1104,13 @@ onUnmounted(() => { stopTicker(); window.removeEventListener('click', hideContex
   color: var(--primary-color);
   text-decoration: none;
   font-weight: 500;
+}
+
+.about-disclaimer {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+  opacity: 0.8;
 }
 
 .pin-indicator {

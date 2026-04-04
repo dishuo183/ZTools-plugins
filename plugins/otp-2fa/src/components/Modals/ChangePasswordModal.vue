@@ -65,6 +65,7 @@ const handleCancel = () => {
                 v-model="currentPassword"
                 placeholder="XXX"
                 @keyup.enter="handleSubmit"
+                spellcheck="false"
               />
               <div class="eye-btn" @click="showCurrent = !showCurrent">
                 <svg v-if="showCurrent" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -84,6 +85,7 @@ const handleCancel = () => {
                 v-model="newPassword"
                 placeholder="XXX"
                 @keyup.enter="handleSubmit"
+                spellcheck="false"
               />
               <div class="eye-btn" @click="showNew = !showNew">
                 <svg v-if="showNew" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -103,6 +105,7 @@ const handleCancel = () => {
                 v-model="confirmPassword"
                 placeholder="XXX"
                 @keyup.enter="handleSubmit"
+                spellcheck="false"
               />
               <div class="eye-btn" @click="showConfirm = !showConfirm">
                 <svg v-if="showConfirm" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
