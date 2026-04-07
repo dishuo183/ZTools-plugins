@@ -33,8 +33,20 @@ function tokenize(expression: string): string[] {
     // 数字（包括小数）
     if (/\d/.test(char)) {
       let num = ''
+      let dotCount = 0
       while (i < expr.length && (/\d/.test(expr[i]) || expr[i] === '.')) {
+        if (expr[i] === '.') {
+          dotCount++
+          if (dotCount > 1) break // 多个小数点停止
+        }
         num += expr[i++]
+      }
+      // 如果有多个小数点，把第二个小数点及后面的留作下一个 token
+      if (dotCount > 1) {
+        // 回退到第一个小数点
+        const lastDotIndex = num.lastIndexOf('.')
+        i -= num.length - lastDotIndex
+        num = num.substring(0, lastDotIndex)
       }
       tokens.push(num)
     }
@@ -60,24 +72,8 @@ function toRPN(expression: string): string[] {
     if (/^\d/.test(token)) {
       output.push(token)
     } else if (token === '%') {
-      // 百分号：前一个数除以100
-      if (output.length > 0) {
-        const last = output.pop()!
-        if (last === ')') {
-          // 括号内的百分号
-          output.push(last)
-          output.push('%')
-        } else if (isOperator(last)) {
-          // 运算符前的百分号：X + % 表示 X * (Y/100) 其中Y是再前一个
-          // 简化处理：直接转为小数
-          output.push('0')
-          output.push('%')
-        } else {
-          // 数字直接转为百分数
-          const num = parseFloat(last) / 100
-          output.push(num.toString())
-        }
-      }
+      // 百分号作为 postfix 运算符，直接加入 output
+      output.push('%')
     } else if (token === '(') {
       stack.push(token)
     } else if (token === ')') {
@@ -192,8 +188,18 @@ export function calculate(expression: string): { result: string; error: boolean 
 export function isValidExpression(expression: string): boolean {
   const cleaned = expression.replace(/\s+/g, '')
 
-  // 检查非法连续运算符
-  if (/[+\-*/%]{2,}/.test(cleaned)) return false
+  // 检查非法连续运算符（允许负号作为一元运算符）
+  // 负号可以在开头或运算符后面（如 5*-2, 5+-2）
+  if (/[+*/%]{2,}/.test(cleaned)) return false
+  // 不能有连续的两个减号
+  if (/--/.test(cleaned)) return false
+
+  // 百分号不能在非法位置：
+  // - 开头
+  // - 紧跟在 ( + * / 后面（- 允许，因为可能是一元负号）
+  // - )% 模式：百分号紧跟右括号且没有操作数
+  if (/^%/.test(cleaned)) return false
+  if (/[(*/+]%/.test(cleaned)) return false
 
   // 检查括号是否匹配
   let parens = 0
@@ -204,8 +210,8 @@ export function isValidExpression(expression: string): boolean {
   }
   if (parens !== 0) return false
 
-  // 不能以运算符结尾（除了右括号）
-  if (/[+\-*/%]$/.test(cleaned)) return false
+  // 不能以运算符结尾（除了右括号和百分号）
+  if (/[+\-*/]$/.test(cleaned)) return false
 
   return true
 }
@@ -214,11 +220,12 @@ export function isValidExpression(expression: string): boolean {
 export function appendToExpression(
   current: string,
   value: string,
-  hasResult: boolean
+  hasResult: boolean,
+  result: string = ''
 ): string {
   // 如果有结果且用户输入运算符，用结果作为起始
   if (hasResult && isOperator(value)) {
-    return current + value
+    return result + value
   }
 
   // 如果有结果且用户输入数字或括号，清空

@@ -13,8 +13,8 @@ export default function Write({ enterAction }: WriteProps) {
       } else if (enterAction.type === 'img') {
         outputPath = window.services.writeImageFile(enterAction.payload)
       }
-    } catch {
-      // 写入错误弹出通知
+    } catch (err) {
+      console.error('Failed to save file:', err)
       window.ztools.showNotification('文件保存出错了！')
     }
     if (outputPath) {

@@ -71,9 +71,9 @@ export default function Calculator({ enterAction }: CalculatorProps) {
     }
 
     // 数字和运算符
-    setExpression((prev) => appendToExpression(prev, value, hasResult))
+    setExpression((prev) => appendToExpression(prev, value, hasResult, result))
     setHasResult(false)
-  }, [expression, hasResult])
+  }, [expression, hasResult, result])
 
   // 处理历史项点击
   const handleHistoryClick = (item: HistoryItem) => {
