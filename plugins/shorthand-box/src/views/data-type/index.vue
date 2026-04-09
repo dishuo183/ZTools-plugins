@@ -271,12 +271,12 @@ onUnmounted(() => {
         <div class="table-scroll">
           <table>
             <colgroup>
-              <col style="width: 60px" />
-              <col style="width: 60px" />
+              <col style="width: 50px" />
+              <col style="width: 50px" />
               <col style="width: 200px" />
-              <col />
-              <col style="width: 80px" />
-              <col style="width: 100px" />
+              <col style="width: 150px" />
+              <col style="width: 50px" />
+              <col style="width: 55px" />
             </colgroup>
             <thead>
               <tr>
@@ -492,6 +492,9 @@ tr:hover .drag-handle {
   align-items: center;
   gap: 8px;
   justify-content: center;
+  .n-button {
+    padding: 0px !important;
+  }
 }
 
 .sortable-ghost > td {

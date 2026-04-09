@@ -418,13 +418,13 @@ onUnmounted(() => {
             <div class="table-scroll">
               <table>
                 <colgroup>
+                  <col style="width: 55px" />
+                  <col style="width: 55px" />
+                  <col style="width: 95px" />
+                  <col style="width: 95px" />
+                  <col style="width: 95px" />
+                  <col style="width: 95px" />
                   <col style="width: 60px" />
-                  <col style="width: 60px" />
-                  <col style="width: 120px" />
-                  <col />
-                  <col style="width: 180px" />
-                  <col style="width: 100px" />
-                  <col style="width: 100px" />
                 </colgroup>
                 <thead>
                   <tr>
@@ -556,7 +556,7 @@ onUnmounted(() => {
 }
 
 .project-list {
-  width: 200px;
+  width: 150px;
   flex-shrink: 0;
   border: 1px solid #e8e8e8;
   border-radius: 3px;
@@ -731,6 +731,9 @@ tr:hover .drag-handle {
   align-items: center;
   gap: 8px;
   justify-content: center;
+  .n-button {
+    padding: 0px !important;
+  }
 }
 
 .sortable-ghost > td {
