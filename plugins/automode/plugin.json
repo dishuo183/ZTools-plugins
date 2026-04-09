@@ -1,7 +1,7 @@
 {
   "name": "automode",
   "title": "主题自动切换",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "定时自动切换 Windows 系统深浅色主题",
   "author": "AutoMode",
   "logo": "logo.png",

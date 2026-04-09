@@ -238,14 +238,16 @@ window.themeAPI = {
   getSavedConfig: getSavedConfig
 };
 
+// 插件加载时立即执行，不等待用户进入面板
+ensureScripts();
+syncThemeOnStartup();
+
 try {
   window.ztools.onPluginEnter(function() {
     console.log('[AutoMode] 插件已激活');
-    ensureScripts();
+    // 面板进入时再次同步，覆盖用户长时间停留期间错过的情况
     syncThemeOnStartup();
   });
 } catch (e) {
-  console.error('[AutoMode] onPluginEnter 初始化失败:', e);
-  ensureScripts();
-  syncThemeOnStartup();
+  console.error('[AutoMode] onPluginEnter 注册失败:', e);
 }
