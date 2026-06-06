@@ -93,7 +93,7 @@
 │   │   ├── crypto.ts                     # 加密与安全存储集成
 │   │   ├── otp.ts                        # OTP 核心算法实现
 │   │   ├── pinyin-schemes.ts             # 拼音方案常量与轻量匹配函数
-│   │   └── pinyin.ts                     # 拼音搜索与双拼转换（含 pinyin-pro 懒加载）
+│   │   └── pinyin.ts                     # 拼音搜索与双拼转换（由 App.vue 按需加载）
 │   ├── App.vue                           # 插件主入口
 │   ├── constants.ts                      # 全局常量定义
 │   ├── main.css                          # 全局样式系统

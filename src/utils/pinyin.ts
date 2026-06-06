@@ -1,13 +1,13 @@
+import { pinyin } from 'pinyin-pro'
 import { fullToDouble, matchesPinyinCached, type PinyinScheme, type PinyinCache, type DoubleSchemeName } from './pinyin-schemes'
 
 export { PINYIN_SCHEMES, fullToDouble, matchesPinyinCached, type PinyinScheme, type PinyinCache } from './pinyin-schemes'
 
-export async function matchesPinyin(name: string, query: string, scheme: PinyinScheme): Promise<boolean> {
+export function matchesPinyin(name: string, query: string, scheme: PinyinScheme): boolean {
   if (!name || !query) return false
   const q = query.toLowerCase()
   if (name.toLowerCase().includes(q)) return true
 
-  const { pinyin } = await import('pinyin-pro')
   const syllables = pinyin(name, { toneType: 'none', type: 'array' }) as string[]
 
   if (syllables.join('').includes(q)) return true
@@ -19,8 +19,7 @@ export async function matchesPinyin(name: string, query: string, scheme: PinyinS
   return false
 }
 
-export async function buildPinyinCache(name: string): Promise<PinyinCache> {
-  const { pinyin } = await import('pinyin-pro')
+export function buildPinyinCache(name: string): PinyinCache {
   const syllables = pinyin(name, { toneType: 'none', type: 'array' }) as string[]
   const full = syllables.join('')
   const initials = syllables.map(s => s[0]).join('')

@@ -52,11 +52,14 @@ const searchQuery = ref('')
 const pinyinCacheMap = ref<Map<string, PinyinCache>>(new Map())
 watch(
   () => accounts.value.map(a => a.id + '|' + a.name),
-  async () => {
+  async (newVal, oldVal, onCleanup) => {
+    let active = true
+    onCleanup(() => { active = false })
     const { buildPinyinCache } = await import('./utils/pinyin')
+    if (!active) return
     const newMap = new Map<string, PinyinCache>()
     for (const acc of accounts.value) {
-      newMap.set(acc.id, await buildPinyinCache(acc.name))
+      newMap.set(acc.id, buildPinyinCache(acc.name))
     }
     pinyinCacheMap.value = newMap
   }
@@ -248,6 +251,10 @@ const initialize = async () => {
     z.onPluginOut(() => {
       isInBackground.value = true
       showIdleModal.value = false
+      if (idleCountdownTimer) {
+        clearInterval(idleCountdownTimer)
+        idleCountdownTimer = null
+      }
       // 空闲检测继续运行：后台超时直接关闭，不弹窗
     })
   }
