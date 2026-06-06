@@ -55,10 +55,11 @@ watch(
   async (newVal, oldVal, onCleanup) => {
     let active = true
     onCleanup(() => { active = false })
+    const snapshot = [...accounts.value]
     const { buildPinyinCache } = await import('./utils/pinyin')
     if (!active) return
     const newMap = new Map<string, PinyinCache>()
-    for (const acc of accounts.value) {
+    for (const acc of snapshot) {
       newMap.set(acc.id, buildPinyinCache(acc.name))
     }
     pinyinCacheMap.value = newMap
@@ -165,6 +166,7 @@ const startIdleCheck = () => {
     if (Date.now() - lastInteractionTime.value > idleThreshold.value) {
       if (isInBackground.value) {
         // 后台无操作直接关闭，不弹窗
+        stopIdleCheck()
         ;(window as any).ztools?.outPlugin?.(true)
       } else {
         // 前台弹倒计时警告
@@ -174,6 +176,7 @@ const startIdleCheck = () => {
           idleCountdown.value--
           if (idleCountdown.value <= 0) {
             clearInterval(idleCountdownTimer); idleCountdownTimer = null
+            stopIdleCheck()
             ;(window as any).ztools?.outPlugin?.(true)
           }
         }, 1000)
