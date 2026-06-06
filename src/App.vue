@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch, defineAsyncComponent } from 'vue'
 import { getOTP, base32tohex } from './utils/otp'
 import { useAuth } from './composables/useAuth'
 import { useAccounts } from './composables/useAccounts'
 import { useTicker } from './composables/useTicker'
 import { useDataManagement } from './composables/useDataManagement'
 
-// Components
+// Components (AccountCard is always needed; Modals are async, loaded on first use)
 import AccountCard from './components/AccountCard.vue'
-import VerifyAuthModal from './components/Modals/VerifyAuthModal.vue'
-import SetPasswordModal from './components/Modals/SetPasswordModal.vue'
-import SettingsModal from './components/Modals/SettingsModal.vue'
-import EditModal from './components/Modals/EditModal.vue'
-import ConfirmModal from './components/Modals/ConfirmModal.vue'
-import ImportDataModal from './components/Modals/ImportDataModal.vue'
-import ChangePasswordModal from './components/Modals/ChangePasswordModal.vue'
+const VerifyAuthModal = defineAsyncComponent(() => import('./components/Modals/VerifyAuthModal.vue'))
+const SetPasswordModal = defineAsyncComponent(() => import('./components/Modals/SetPasswordModal.vue'))
+const SettingsModal = defineAsyncComponent(() => import('./components/Modals/SettingsModal.vue'))
+const EditModal = defineAsyncComponent(() => import('./components/Modals/EditModal.vue'))
+const ConfirmModal = defineAsyncComponent(() => import('./components/Modals/ConfirmModal.vue'))
+const ImportDataModal = defineAsyncComponent(() => import('./components/Modals/ImportDataModal.vue'))
+const ChangePasswordModal = defineAsyncComponent(() => import('./components/Modals/ChangePasswordModal.vue'))
 import { STORAGE_KEY, CONFIG_KEY, DEFAULT_PINYIN_SCHEME } from './constants'
-import { matchesPinyinCached, buildPinyinCache, type PinyinScheme, type PinyinCache } from './utils/pinyin'
+import { matchesPinyinCached, type PinyinScheme, type PinyinCache } from './utils/pinyin-schemes'
 
 // --- Composables Initialization ---
 const {
@@ -52,14 +52,14 @@ const searchQuery = ref('')
 const pinyinCacheMap = ref<Map<string, PinyinCache>>(new Map())
 watch(
   () => accounts.value.map(a => a.id + '|' + a.name),
-  () => {
+  async () => {
+    const { buildPinyinCache } = await import('./utils/pinyin')
     const newMap = new Map<string, PinyinCache>()
     for (const acc of accounts.value) {
-      newMap.set(acc.id, buildPinyinCache(acc.name))
+      newMap.set(acc.id, await buildPinyinCache(acc.name))
     }
     pinyinCacheMap.value = newMap
-  },
-  { immediate: true }
+  }
 )
 
 // filteredAccounts 携带真实索引，避免模板中 indexOf 的 O(N²) 开销
